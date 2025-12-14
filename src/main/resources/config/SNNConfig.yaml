@@ -1,0 +1,112 @@
+# SNN Configuration File Template
+# This example defines a simple 3-layer cortical model.
+
+# -----------------------------------------------------------------------------
+# 1. Neuron Type Definitions
+# -----------------------------------------------------------------------------
+# Defines the biophysical parameters for each type of neuron used in the model.
+neuron_types:
+  RS:  # Regular Spiking (typically excitatory)
+    a: 0.02
+    b: 0.2
+    c: -65.0
+    d: 8.0
+    v0: -70.0
+    u0: -14.0
+  FS:  # Fast Spiking (typically inhibitory)
+    a: 0.1
+    b: 0.2
+    c: -65.0
+    d: 2.0
+    v0: -70.0
+    u0: -14.0
+
+# -----------------------------------------------------------------------------
+# 2. Group Hierarchy
+# -----------------------------------------------------------------------------
+# Defines the structure of the network, with nested groups forming layers.
+groups:
+  - name: Cortex
+    subgroups:
+      - name: Layer1
+        neurons:
+          - type: RS
+            count: 80
+          - type: FS
+            count: 20
+      - name: Layer2
+        neurons:
+          - type: RS
+            count: 80
+          - type: FS
+            count: 20
+      - name: Layer3
+        neurons:
+          - type: RS
+            count: 80
+          - type: FS
+            count: 20
+
+# -----------------------------------------------------------------------------
+# 3. Connection Rules
+# -----------------------------------------------------------------------------
+# A list of rules that create synapses between neuron groups.
+connections:
+
+  # Rule 1: Local excitatory connections within each layer.
+  # Neurons of type RS connect probabilistically to all other neurons
+  # within the same layer. The wildcard [0] ensures that Layer1 connects
+  # only to Layer1, Layer2 to Layer2, etc.
+  - from: Cortex.[0]
+    to: Cortex.[0]
+    from_type: RS
+    to_type: all
+    weight:
+      uniform:
+        min: 0.5
+        max: 1.0
+    rule:
+      type: probabilistic
+      probability: 0.1
+
+  # Rule 2: Local inhibitory connections within each layer.
+  # Neurons of type FS connect to a fixed number of RS neurons
+  # within the same layer, providing inhibitory feedback.
+  - from: Cortex.[0]
+    to: Cortex.[0]
+    from_type: FS
+    to_type: RS
+    weight:
+      fixed: -2.0
+    rule:
+      type: fixed_out_degree
+      count: 15
+
+  # Rule 3: Feed-forward excitatory projection from Layer1 to Layer2.
+  # This rule does not use wildcards, defining a specific connection
+  # between two non-leaf groups. All RS neurons in Layer1 project to all
+  # neurons in Layer2.
+  - from: Cortex.Layer1
+    to: Cortex.Layer2
+    from_type: RS
+    to_type: all
+    weight:
+      normal:
+        mean: 1.2
+        std: 0.4
+    rule:
+      type: all_to_all
+
+  # Rule 4: Feed-forward excitatory projection from Layer2 to Layer3.
+  # Similar to the rule above, this creates a connection between Layer2 and Layer3.
+  - from: Cortex.Layer2
+    to: Cortex.Layer3
+    from_type: RS
+    to_type: all
+    weight:
+      normal:
+        mean: 1.0
+        std: 0.3
+    rule:
+      type: probabilistic
+      probability: 0.25

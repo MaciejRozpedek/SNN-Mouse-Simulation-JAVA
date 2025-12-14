@@ -1,0 +1,141 @@
+# SNN Configuration File Template
+# This example defines a 3-layer cortical model with sensory-specific sub-regions in Layer1.
+
+# -----------------------------------------------------------------------------
+# 1. Neuron Type Definitions
+# -----------------------------------------------------------------------------
+# Defines the biophysical parameters for each type of neuron used in the model.
+neuron_types:
+  RS:  # Regular Spiking (typically excitatory)
+    a: 0.02
+    b: 0.2
+    c: -65.0
+    d: 8.0
+    v0: -70.0
+    u0: -14.0
+  FS:  # Fast Spiking (typically inhibitory)
+    a: 0.1
+    b: 0.2
+    c: -65.0
+    d: 2.0
+    v0: -70.0
+    u0: -14.0
+
+# -----------------------------------------------------------------------------
+# 2. Group Hierarchy
+# -----------------------------------------------------------------------------
+# Defines the network structure. Layer1 is split into two sensory modalities.
+groups:
+  - name: Cortex
+    subgroups:
+      - name: Layer1
+        subgroups:
+          - name: Vision
+            neurons:
+              - type: RS
+                count: 80
+              - type: FS
+                count: 20
+          - name: Sound
+            neurons:
+              - type: RS
+                count: 80
+              - type: FS
+                count: 20
+      - name: Layer2
+        neurons:
+          - type: RS
+            count: 150
+          - type: FS
+            count: 50
+      - name: Layer3
+        neurons:
+          - type: RS
+            count: 100
+          - type: FS
+            count: 25
+
+# -----------------------------------------------------------------------------
+# 3. Connection Rules
+# -----------------------------------------------------------------------------
+# A list of rules that create synapses between neuron groups.
+
+connections:
+
+  # Rule 1: Strong, local excitatory connections within each sensory modality in Layer1.
+  # The wildcard [0] ensures this rule creates connections for "Vision to Vision"
+  # and "Sound to Sound", but NOT between them.
+  - from: Cortex.Layer1.[0]
+    to: Cortex.Layer1.[0]
+    from_type: RS
+    to_type: all
+    weight:
+      uniform:
+        min: 0.8
+        max: 1.5
+    rule:
+      type: probabilistic
+      probability: 0.15
+
+  # Rule 2: Weaker, cross-modal excitatory connection from Vision to Sound.
+  # This demonstrates a specific, targeted connection between two sub-regions.
+  - from: Cortex.Layer1.Vision
+    to: Cortex.Layer1.Sound
+    from_type: RS
+    to_type: RS
+    weight:
+      fixed: 0.4
+    rule:
+      type: fixed_out_degree
+      count: 10
+
+  # Rule 3: Local inhibitory feedback within each sensory modality in Layer1.
+  # Again, the wildcard [0] applies this rule independently to the Vision and Sound subgroups.
+  - from: Cortex.Layer1.[0]
+    to: Cortex.Layer1.[0]
+    from_type: FS
+    to_type: RS
+    weight:
+      fixed: -2.5
+    rule:
+      type: probabilistic
+      probability: 0.4
+
+  # Rule 4: Convergent feed-forward projection from all of Layer1 to Layer2.
+  # 'from' targets a non-leaf group, so neurons from both Vision and Sound
+  # will project to Layer2, allowing for multi-modal integration.
+  - from: Cortex.Layer1
+    to: Cortex.Layer2
+    from_type: RS
+    to_type: all
+    weight:
+      normal:
+        mean: 1.0
+        std: 0.3
+    rule:
+      type: probabilistic
+      probability: 0.2
+
+  # Rule 5: Local recurrent connections in Layer2.
+  # A simple rule for connections within a single, larger layer.
+  - from: Cortex.Layer2
+    to: Cortex.Layer2
+    from_type: all
+    to_type: all
+    weight:
+      uniform:
+        min: -1.0
+        max: 1.0
+    rule:
+      type: probabilistic
+      probability: 0.05
+
+  # Rule 6: Feed-forward projection from Layer2 to Layer3.
+  - from: Cortex.Layer2
+    to: Cortex.Layer3
+    from_type: RS
+    to_type: RS
+    weight:
+      fixed: 1.2
+    rule:
+      type: all_to_all
