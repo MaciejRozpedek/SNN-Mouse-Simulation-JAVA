@@ -27,7 +27,7 @@ public class World {
         this.width = width;
         this.height = height;
         this.agent = new Agent(width / 2, height / 2);
-        this.food = new ArrayList<Food>();
+        this.food = new ArrayList<>();
         initializeFood(numberOfFood);
     }
 
