@@ -31,7 +31,7 @@ public class World {
         initializeFood(numberOfFood);
     }
 
-    private void update(){
+    public void update(){
         Food closestFood = null;
         double minDistanceSquared = Double.MAX_VALUE;
         double dxToClosest = 0;
