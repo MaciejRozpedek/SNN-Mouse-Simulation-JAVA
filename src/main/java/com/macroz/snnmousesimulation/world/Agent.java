@@ -1,10 +1,13 @@
 package com.macroz.snnmousesimulation.world;
 
 import lombok.Getter;
+import lombok.Setter;
 
 @Getter
 public class Agent {
+    @Setter
     private double x;
+    @Setter
     private double y;
     private double angle;
     // SNN instance
@@ -44,6 +47,9 @@ public class Agent {
         // move(speed, rotation);
     }
 
+    public void applyReward(){
+        throw new UnsupportedOperationException("Not implemented yet.");
+    }
 
     private double[] calculateSensoryInput(double distToFood, double angleToFood){
         // Implementation of sensor transformation

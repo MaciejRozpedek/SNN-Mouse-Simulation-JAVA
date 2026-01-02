@@ -1,5 +1,7 @@
 package com.macroz.snnmousesimulation.world;
 
-public class Food {
-    double x, y;
+import lombok.Getter;
+
+@Getter
+public record Food(double x, double y) {
 }
