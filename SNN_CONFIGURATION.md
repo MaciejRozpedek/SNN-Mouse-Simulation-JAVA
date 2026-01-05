@@ -69,10 +69,13 @@ connections:
     to: <string>
     from_type: <string>
     to_type: <string>
+    exclude_self: <boolean>
     weight:
       # ... (exactly one weight rule)
     rule:
-      # ... (exactly one topology rule)
+      type: <string>
+      allow_autapses: <boolean>
+      # ... (topology-specific parameters)
 ```
 
 ### General Properties
@@ -81,6 +84,7 @@ connections:
 *   `to` (`<string>`): An identifier or pattern for the target group (doesn't have to be a leaf), following the same syntax and rules as the `from` field.
 *   `from_type` (`<string>`): Specifies which neuron types within the source group will project connections. This can be a specific type (e.g., "RS") or `"all"`.
 *   `to_type` (`<string>`): Specifies which neuron types within the target group will receive connections. This can be a specific type (e.g., "FS") or `"all"`.
+*   `exclude_self` (Optional `<boolean>`, default `false`): If `true`, prevents a group from connecting to itself when patterns or wildcards are used.
 
 ---
 
@@ -101,6 +105,11 @@ Defines the synaptic weight for the connections. **Exactly one** of the followin
 ### Connection Topology (`rule`)
 
 Defines the connection pattern. **Exactly one** of the following topology rules must be chosen.
+
+
+*   **Common Property:** `allow_autapses` (Optional `<boolean>`, default `false`): If `true`, allows a neuron to form a connection with itself (autapse). If `false`, source neuron `i` will never connect to target neuron `i`.
+
+**Topology rules:**
 
 *   `type: "all_to_all"`: Every neuron in the source group connects to every neuron in the target group.
 *   `type: "one_to_one"`: Neuron `i` in the source connects to neuron `i` in the target. Requires source and target groups to have the same size.

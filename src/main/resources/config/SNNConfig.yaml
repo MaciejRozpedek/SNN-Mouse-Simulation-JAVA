@@ -61,6 +61,7 @@ connections:
     to: Cortex.[0]
     from_type: RS
     to_type: all
+    exclude_self: false
     weight:
       uniform:
         min: 0.5
@@ -68,6 +69,7 @@ connections:
     rule:
       type: probabilistic
       probability: 0.1
+      allow_autapses: true
 
   # Rule 2: Local inhibitory connections within each layer.
   # Neurons of type FS connect to a fixed number of RS neurons
@@ -76,11 +78,13 @@ connections:
     to: Cortex.[0]
     from_type: FS
     to_type: RS
+    exclude_self: false
     weight:
       fixed: -2.0
     rule:
       type: fixed_out_degree
       count: 15
+      allow_autapses: false
 
   # Rule 3: Feed-forward excitatory projection from Layer1 to Layer2.
   # This rule does not use wildcards, defining a specific connection
@@ -90,12 +94,14 @@ connections:
     to: Cortex.Layer2
     from_type: RS
     to_type: all
+#    exclude_self: omitted since from and to are different groups, defaults to false
     weight:
       normal:
         mean: 1.2
         std: 0.4
     rule:
       type: all_to_all
+      allow_autapses: false
 
   # Rule 4: Feed-forward excitatory projection from Layer2 to Layer3.
   # Similar to the rule above, this creates a connection between Layer2 and Layer3.
@@ -103,6 +109,7 @@ connections:
     to: Cortex.Layer3
     from_type: RS
     to_type: all
+#    exclude_self: omitted since from and to are different groups, defaults to false
     weight:
       normal:
         mean: 1.0
@@ -110,3 +117,4 @@ connections:
     rule:
       type: probabilistic
       probability: 0.25
+      allow_autapses: false

@@ -5,6 +5,7 @@ import com.macroz.snnmousesimulation.core.SnnNetworkData;
 import com.macroz.snnmousesimulation.exception.SnnParseException;
 import com.macroz.snnmousesimulation.loader.structure.GroupInfo;
 import com.macroz.snnmousesimulation.loader.structure.NeuronInfo;
+import com.macroz.snnmousesimulation.utility.WeightGenerator;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.nodes.*;
 
@@ -24,8 +25,12 @@ public class NetworkTopologyLoader {
     private final List<List<Integer>> synapticTargets = new ArrayList<>();
     private final List<List<Double>> synapticWeights = new ArrayList<>();
 
+    // Helper to prevent duplicate connections during generation: existingConnections[srcIndex].contains(targetIndex)
+    private final List<Set<Integer>> existingConnections = new ArrayList<>();
+
     private GroupInfo rootGroup;
     private int totalNeuronCount = 0;
+    private final Random random = new Random();
 
     public record GroupPair(GroupInfo from, GroupInfo to) {}
 
@@ -48,6 +53,7 @@ public class NetworkTopologyLoader {
         for(int i = 0; i < totalNeuronCount; i++) {
             synapticTargets.add(new ArrayList<>());
             synapticWeights.add(new ArrayList<>());
+            existingConnections.add(new HashSet<>());
         }
 
         loadConnections(getChildNodeRequired(root, "connections"));
@@ -166,6 +172,206 @@ public class NetworkTopologyLoader {
         }
     }
 
+    private void loadConnections(Node node) {
+        if (!(node instanceof SequenceNode sequenceNode)) {
+            throw new SnnParseException("Expected sequence for 'connections'.", node.getStartMark());
+        }
+
+        for (Node connectionNode : sequenceNode.getValue()) {
+            String fromGroup = nodeAs(getChildNodeRequired(connectionNode, "from"), String.class);
+            String toGroup = nodeAs(getChildNodeRequired(connectionNode, "to"), String.class);
+            String fromType = nodeAs(getChildNodeRequired(connectionNode, "from_type"), String.class);
+            String toType = nodeAs(getChildNodeRequired(connectionNode, "to_type"), String.class);
+
+            boolean excludeSelf = false;
+            Node excludeNode = getChildNode(connectionNode, "exclude_self");
+            if (excludeNode != null) {
+                excludeSelf = nodeAs(excludeNode, Boolean.class);
+            }
+
+            Node ruleNode = getChildNodeRequired(connectionNode, "rule");
+            Node weightNode = getChildNodeRequired(connectionNode, "weight");
+
+            WeightGenerator weightGen = createWeightGenerator(weightNode);
+
+            List<GroupPair> matchedPairs = findMatchingGroups(fromGroup, toGroup, excludeSelf);
+
+            for (GroupPair pair : matchedPairs) {
+                createConnectionsBetweenGroups(pair.from(), pair.to(), fromType, toType, ruleNode, weightGen);
+            }
+        }
+    }
+
+    private void createConnectionsBetweenGroups(GroupInfo fromGroup, GroupInfo toGroup,
+                                                String fromType, String toType,
+                                                Node ruleNode, WeightGenerator weightGen) {
+
+        int fromTypeId = fromType.equals("all") ? -1 : getNeuronTypeId(fromType, ruleNode);
+        int toTypeId = toType.equals("all") ? -1 : getNeuronTypeId(toType, ruleNode);
+
+        List<Integer> fromNeurons = collectNeurons(fromGroup, fromTypeId);
+        List<Integer> toNeurons = collectNeurons(toGroup, toTypeId);
+
+        if (fromNeurons.isEmpty() || toNeurons.isEmpty()) return;
+
+        String ruleType = nodeAs(getChildNodeRequired(ruleNode, "type"), String.class);
+
+        Boolean allowAutapses = false;
+
+        Node autapsesNode = getChildNode(ruleNode, "allow_autapses");
+        if (autapsesNode != null) {
+            allowAutapses = nodeAs(autapsesNode, Boolean.class);
+        }
+
+
+        switch (ruleType) {
+            case "all_to_all" -> {
+                for (int src : fromNeurons) {
+                    for (int tgt : toNeurons) {
+                        addConnection(src, tgt, weightGen, allowAutapses);
+                    }
+                }
+            }
+            case "one_to_one" -> {
+                if (fromNeurons.size() != toNeurons.size()) {
+                    throw new SnnParseException("Size mismatch for 'one_to_one' rule.", ruleNode.getStartMark());
+                }
+                for (int i = 0; i < fromNeurons.size(); i++) {
+                    addConnection(fromNeurons.get(i), toNeurons.get(i), weightGen, allowAutapses);
+                }
+            }
+            case "probabilistic" -> {
+                double probability = nodeAs(getChildNodeRequired(ruleNode, "probability"), Double.class);
+                for (int src : fromNeurons) {
+                    for (int tgt : toNeurons) {
+                        if (random.nextDouble() < probability) {
+                            addConnection(src, tgt, weightGen, allowAutapses);
+                        }
+                    }
+                }
+            }
+            case "fixed_out_degree" -> {
+                int count = nodeAs(getChildNodeRequired(ruleNode, "count"), Integer.class);
+                for (int src : fromNeurons) {
+                    List<Integer> candidates = new ArrayList<>();
+                    for (int tgt : toNeurons) {
+                        if (!isValidConnection(src, tgt, allowAutapses)) continue;
+                        candidates.add(tgt);
+                    }
+                    Collections.shuffle(candidates, random);
+                    int limit = Math.min(count, candidates.size());
+                    for (int k = 0; k < limit; k++) {
+                        addConnection(src, candidates.get(k), weightGen, false);
+                    }
+                }
+            }
+            case "fixed_in_degree" -> {
+                int count = nodeAs(getChildNodeRequired(ruleNode, "count"), Integer.class);
+                for (int tgt : toNeurons) {
+                    List<Integer> candidates = new ArrayList<>();
+                    for (int src : fromNeurons) {
+                        if (!isValidConnection(src, tgt, allowAutapses)) continue;
+                        candidates.add(src);
+                    }
+                    Collections.shuffle(candidates, random);
+                    int limit = Math.min(count, candidates.size());
+                    for (int k = 0; k < limit; k++) {
+                        addConnection(candidates.get(k), tgt, weightGen, false);
+                    }
+                }
+            }
+            default -> throw new SnnParseException("Unknown rule type: " + ruleType, ruleNode.getStartMark());
+        }
+    }
+
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
+    private boolean isValidConnection(int src, int tgt, boolean allowAutapses) {
+        if (allowAutapses && src == tgt) return false;
+        return !existingConnections.get(src).contains(tgt);
+    }
+
+    private void addConnection(int src, int tgt, WeightGenerator weightGen, boolean allowAutapses) {
+        if (!isValidConnection(src, tgt, allowAutapses)) return;
+
+        if (existingConnections.get(src).contains(tgt)) return;
+
+        synapticTargets.get(src).add(tgt);
+        synapticWeights.get(src).add(weightGen.generate());
+        existingConnections.get(src).add(tgt);
+    }
+
+    private List<Integer> collectNeurons(GroupInfo group, int typeId) {
+        List<Integer> indices = new ArrayList<>();
+        collectNeuronsRecursive(group, typeId, indices);
+        return indices;
+    }
+
+    private void collectNeuronsRecursive(GroupInfo group, int typeId, List<Integer> indices) {
+        if (!group.getSubgroups().isEmpty()) {
+            for (GroupInfo sub : group.getSubgroups()) {
+                collectNeuronsRecursive(sub, typeId, indices);
+            }
+        }
+        for (NeuronInfo nInfo : group.getNeurons()) {
+            if (typeId == -1 || nInfo.getTypeId() == typeId) {
+                for (int i = 0; i < nInfo.getCount(); i++) {
+                    indices.add(nInfo.getStartIndex() + i);
+                }
+            }
+        }
+    }
+
+    private int getNeuronTypeId(String typeName, Node context) {
+        if (!neuronTypeToIdMap.containsKey(typeName)) {
+            throw new SnnParseException("Unknown neuron type '" + typeName + "' in connections.", context.getStartMark());
+        }
+        return neuronTypeToIdMap.get(typeName);
+    }
+
+    private WeightGenerator createWeightGenerator(Node weightNode) {
+        try {
+            if (!(weightNode instanceof MappingNode)) {
+                throw new SnnParseException("Weight definition must be a map.", weightNode.getStartMark());
+            }
+
+            Node fixedNode = getChildNode(weightNode, "fixed");
+            Node uniformNode = getChildNode(weightNode, "uniform");
+            Node normalNode = getChildNode(weightNode, "normal");
+
+            int count = 0;
+            if (fixedNode != null) count++;
+            if (uniformNode != null) count++;
+            if (normalNode != null) count++;
+
+            if (count != 1) {
+                throw new SnnParseException("Exactly one weight type must be specified (fixed, uniform, or normal).", weightNode.getStartMark());
+            }
+
+            if (fixedNode != null) {
+                return WeightGenerator.createFixed(nodeAs(fixedNode, Double.class));
+            }
+
+            if (uniformNode != null) {
+                double min = nodeAs(getChildNodeRequired(uniformNode, "min"), Double.class);
+                double max = nodeAs(getChildNodeRequired(uniformNode, "max"), Double.class);
+                return WeightGenerator.createUniform(min, max);
+            }
+
+            if (normalNode != null) {
+                double mean = nodeAs(getChildNodeRequired(normalNode, "mean"), Double.class);
+                double std = nodeAs(getChildNodeRequired(normalNode, "std"), Double.class);
+                return WeightGenerator.createNormal(mean, std);
+            }
+
+            throw new SnnParseException("Unknown weight type. Expected fixed, uniform or normal.", weightNode.getStartMark());
+
+        } catch (SnnParseException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new SnnParseException("Unexpected error during weight generation: " + e.getMessage(), weightNode.getStartMark());
+        }
+    }
+
     protected List<GroupPair> findMatchingGroups(String fromPattern, String toPattern, boolean excludeSelf) {
         List<GroupPair> matchedPairs = new ArrayList<>();
         Map<Integer, String> wildcardValues = new HashMap<>();
@@ -192,7 +398,6 @@ public class NetworkTopologyLoader {
         if (isWildcard(segment)) {
             int wildcardId = getWildcardNumber(segment);
 
-            // If this wildcard has been seen before, it must match the same subgroup
             if (wildcardValues.containsKey(wildcardId)) {
                 String expectedName = wildcardValues.get(wildcardId);
                 for (GroupInfo sub : currentFrom.getSubgroups()) {
@@ -201,7 +406,6 @@ public class NetworkTopologyLoader {
                     }
                 }
             } else {
-                // New wildcard, try all subgroups
                 for (GroupInfo sub : currentFrom.getSubgroups()) {
                     Map<Integer, String> nextWildcards = new HashMap<>(wildcardValues);
                     nextWildcards.put(wildcardId, sub.getName());
@@ -209,7 +413,6 @@ public class NetworkTopologyLoader {
                 }
             }
         } else {
-            // Literal segment, check if any subgroup matches exactly
             for (GroupInfo sub : currentFrom.getSubgroups()) {
                 if (sub.getName().equals(segment)) {
                     findMatchingGroupsRecursive(sub, rootForTo, fromSegments, toSegments, index + 1, wildcardValues, excludeSelf, matchedPairs);
@@ -264,10 +467,6 @@ public class NetworkTopologyLoader {
 
     private int getWildcardNumber(String segment) {
         return Integer.parseInt(segment.substring(1, segment.length() - 1));
-    }
-
-    private void loadConnections(Node node) {
-        // TODO: Implement in next step
     }
 
     private Node getChildNode(Node parent, String key) {
