@@ -162,6 +162,19 @@ public class SnnEngine {
         }
     }
 
+    public void addInputCurrent(int[] neuronIndices, double[] currents) {
+        if (neuronIndices.length != currents.length) {
+            throw new IllegalArgumentException("Neuron indices and currents arrays must have the same length.");
+        }
+        for (int i = 0; i < neuronIndices.length; i++) {
+            int idx = neuronIndices[i];
+            if (idx < 0 || idx >= totalNeuronCount) {
+                throw new IllegalArgumentException("Invalid neuron index: " + idx);
+            }
+            this.I[idx] += currents[i];
+        }
+    }
+
     public void addInputCurrent(int startNeuronIndex, int endNeuronIndex, double current) {
         if (startNeuronIndex < 0 || endNeuronIndex >= totalNeuronCount ||
                 startNeuronIndex > endNeuronIndex) {

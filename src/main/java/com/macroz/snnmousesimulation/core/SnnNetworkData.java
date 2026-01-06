@@ -1,5 +1,7 @@
 package com.macroz.snnmousesimulation.core;
 
+import com.macroz.snnmousesimulation.core.input.InputConfig;
+
 import java.util.List;
 
 public record SnnNetworkData(
@@ -8,5 +10,8 @@ public record SnnNetworkData(
     double[] initialV,         // Initial membrane potential
     double[] initialU,         // Initial recovery variable
     int[][] synapticTargets,   // Adjacency list: source -> [targets]
-    double[][] synapticWeights // Weights matching the targets
+    double[][] synapticWeights,// Weights matching the targets
+
+	// Agent data
+	List<InputConfig> inputConfigs
 ) {}

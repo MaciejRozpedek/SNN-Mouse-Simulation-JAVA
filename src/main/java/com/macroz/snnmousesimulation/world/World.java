@@ -1,6 +1,9 @@
 package com.macroz.snnmousesimulation.world;
 
 
+import com.macroz.snnmousesimulation.SnnMouseSimulationApplication;
+import com.macroz.snnmousesimulation.core.SnnNetworkData;
+import com.macroz.snnmousesimulation.loader.NetworkTopologyLoader;
 import lombok.Getter;
 
 import java.util.ArrayList;
@@ -26,12 +29,15 @@ public class World {
     public World(double width, double height, int numberOfFood) {
         this.width = width;
         this.height = height;
-        this.agent = new Agent(width / 2, height / 2);
         this.food = new ArrayList<>();
         initializeFood(numberOfFood);
+        SnnNetworkData snnNetworkData = new NetworkTopologyLoader().load(
+                    SnnMouseSimulationApplication.class.getResourceAsStream("/config/SNNConfig.yaml")
+        );
+        this.agent = new Agent(width / 2, height / 2, snnNetworkData);
     }
 
-    public void update(){
+    public void update(double deltaTime) {
         Food closestFood = null;
         double minDistanceSquared = Double.MAX_VALUE;
         double dxToClosest = 0;
@@ -53,7 +59,9 @@ public class World {
         double globalAngleToFood = Math.atan2(dyToClosest, dxToClosest);
         double relativeAngle = normalizeAngle(globalAngleToFood - agent.getAngle());
 
-        agent.update(distance, relativeAngle);
+        // TODO: Pass world state instead of World class. Change InputSystem and InputStrategies accordingly.
+        agent.update(this, deltaTime);
+//        agent.update(distance, relativeAngle);
         handleBoundaries();
 
         if (closestFood != null) {

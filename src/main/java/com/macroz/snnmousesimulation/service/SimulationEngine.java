@@ -28,11 +28,11 @@ public class SimulationEngine {
             return t;
         });
 
-        scheduler.scheduleAtFixedRate(this::tick, 0, 16, TimeUnit.MILLISECONDS);
+        scheduler.scheduleAtFixedRate(() -> tick(16), 0, 16, TimeUnit.MILLISECONDS);
     }
 
-    private void tick() {
-        world.update();
+    private void tick(double deltaTime) {
+        world.update(deltaTime);
     }
 
     @PreDestroy

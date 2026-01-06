@@ -48,7 +48,20 @@ groups:
             count: 20
 
 # -----------------------------------------------------------------------------
-# 3. Connection Rules
+# 3. Input Definitions
+# -----------------------------------------------------------------------------
+# Defines external inputs to specific neuron groups.
+#inputs:
+#  - name: VisionFront
+#    sensor_type: EXAMPLE
+#    target_group: Cortex.Layer1
+#    target_type: RS
+#    params:
+#      fov: 120
+#      range: 500
+
+# -----------------------------------------------------------------------------
+# 4. Connection Rules
 # -----------------------------------------------------------------------------
 # A list of rules that create synapses between neuron groups.
 connections:

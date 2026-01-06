@@ -2,6 +2,7 @@ package com.macroz.snnmousesimulation.loader;
 
 import com.macroz.snnmousesimulation.core.IzhikevichParams;
 import com.macroz.snnmousesimulation.core.SnnNetworkData;
+import com.macroz.snnmousesimulation.core.input.InputConfig;
 import com.macroz.snnmousesimulation.exception.SnnParseException;
 import com.macroz.snnmousesimulation.loader.structure.GroupInfo;
 import com.macroz.snnmousesimulation.loader.structure.NeuronInfo;
@@ -32,6 +33,8 @@ public class NetworkTopologyLoader {
     private int totalNeuronCount = 0;
     private final Random random = new Random();
 
+    private final List<InputConfig> inputConfigs = new ArrayList<>();
+
     public record GroupPair(GroupInfo from, GroupInfo to) {}
 
     public SnnNetworkData load(InputStream inputStream) {
@@ -58,6 +61,11 @@ public class NetworkTopologyLoader {
 
         loadConnections(getChildNodeRequired(root, "connections"));
 
+        Node inputsNode = getChildNode(root, "inputs");
+        if (inputsNode != null) {
+            loadInputs(inputsNode);
+        }
+
         return buildDto();
     }
 
@@ -83,8 +91,52 @@ public class NetworkTopologyLoader {
                 vArr,
                 uArr,
                 targetsArr,
-                weightsArr
+                weightsArr,
+                new ArrayList<>(inputConfigs)
         );
+    }
+
+    private void loadInputs(Node node) {
+        if (!(node instanceof SequenceNode sequenceNode)) {
+            throw new SnnParseException("section 'inputs' must be a sequence.", node.getStartMark());
+        }
+
+        for (Node inputNode : sequenceNode.getValue()) {
+            String name = nodeAs(getChildNodeRequired(inputNode, "name"), String.class);
+            String type = nodeAs(getChildNodeRequired(inputNode, "sensor_type"), String.class);
+            String target = nodeAs(getChildNodeRequired(inputNode, "target_group"), String.class);
+            String targetType = nodeAs(getChildNodeRequired(inputNode, "target_type"), String.class);
+
+            Map<String, Object> params = new HashMap<>();
+            Node paramsNode = getChildNode(inputNode, "params");
+            if (paramsNode instanceof MappingNode mappingNode) {
+                for (NodeTuple tuple : mappingNode.getValue()) {
+                    String key = nodeAs(tuple.getKeyNode(), String.class);
+                    Node valNode = tuple.getValueNode();
+                    Object value = parseScalarValue((ScalarNode) valNode);
+                    params.put(key, value);
+                }
+            }
+
+            var targetGroup = findMatchingGroups(target, target, false).stream()
+                    .filter(pair -> pair.from().getFullName().equals(pair.to().getFullName()))
+                    .map(GroupPair::from)
+                    .reduce( (a, b) -> {
+                        throw new SnnParseException("Input target group '" + target + "' is ambiguous.", inputNode.getStartMark());
+                    })
+                    .orElseThrow(() -> new SnnParseException("Input target group '" + target + "' not found.", inputNode.getStartMark()));
+
+            int targetTypeId = targetType.equals("all") ? -1 : getNeuronTypeId(targetType, inputNode);
+
+            List<Integer> targetNeurons = collectNeurons(targetGroup, targetTypeId);
+
+            inputConfigs.add(new InputConfig(
+                    name,
+                    type,
+                    targetNeurons.stream().mapToInt(i -> i).toArray(),
+                    params
+            ));
+        }
     }
 
     private void loadNeuronTypes(Node node) {
@@ -489,6 +541,14 @@ public class NetworkTopologyLoader {
             throw new SnnParseException("Missing required key '" + key + "'.", parent.getStartMark());
         }
         return child;
+    }
+
+    private Object parseScalarValue(ScalarNode node) {
+        String val = node.getValue();
+        try { return Integer.parseInt(val); } catch (NumberFormatException e1) {}
+        try { return Double.parseDouble(val); } catch (NumberFormatException e2) {}
+        if ("true".equalsIgnoreCase(val) || "false".equalsIgnoreCase(val)) return Boolean.parseBoolean(val);
+        return val;
     }
 
     @SuppressWarnings("unchecked")
