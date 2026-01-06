@@ -51,14 +51,16 @@ groups:
 # 3. Input Definitions
 # -----------------------------------------------------------------------------
 # Defines external inputs to specific neuron groups.
-#inputs:
-#  - name: VisionFront
-#    sensor_type: EXAMPLE
-#    target_group: Cortex.Layer1
-#    target_type: RS
-#    params:
-#      fov: 120
-#      range: 500
+inputs:
+  - name: VisionFront
+    sensor_type: GAUSSIAN_VISION
+    target_group: Cortex.Layer1
+    target_type: RS
+    params:
+      fov: 120
+      range: 500
+      overlap_factor: 1.5
+      max_current: 10.0
 
 # -----------------------------------------------------------------------------
 # 4. Connection Rules
