@@ -94,11 +94,38 @@ public class World {
     private void handleBoundaries() {
         double x = agent.getX();
         double y = agent.getY();
+        double angle = agent.getAngle();
+        boolean bounced = false;
 
-        if (x < 0) agent.setX(0);
-        else if (x > width) agent.setX(width);
+        // Check horizontal walls (Left/Right)
+        if (x < 0) {
+            x = 0;
+            angle = Math.PI - angle;
+            bounced = true;
+        } else if (x > width) {
+            x = width;
+            angle = Math.PI - angle;
+            bounced = true;
+        }
 
-        if (y < 0) agent.setY(0);
-        else if (y > height) agent.setY(height);
+        // Check vertical walls (Top/Bottom)
+        if (y < 0) {
+            y = 0;
+            angle = -angle;
+            bounced = true;
+        } else if (y > height) {
+            y = height;
+            angle = -angle;
+            bounced = true;
+        }
+
+        if (bounced) {
+            agent.setX(x);
+            agent.setY(y);
+            agent.setAngle(normalizeAngle(angle));
+            
+            // Penalize or Reset SNN?
+            // agent.applyPunishment(); 
+        }
     }
 }
