@@ -29,22 +29,28 @@ function toggleSimulation() {
 
 function startSimulation() {
     if (isRunning) return;
-    isRunning = true;
-    toggleBtn.textContent = "Stop Simulation";
-    toggleBtn.classList.add('stop');
-
-    gameLoop().catch(console.error);
+    
+    // Call backend start
+    fetch('/api/start').then(() => {
+        isRunning = true;
+        toggleBtn.textContent = "Stop Simulation";
+        toggleBtn.classList.add('stop');
+        gameLoop().catch(console.error);
+    }).catch(err => console.error("Failed to start:", err));
 }
 
 function stopSimulation() {
-    isRunning = false;
-    toggleBtn.textContent = "Start Simulation";
-    toggleBtn.classList.remove('stop');
-
-    if (animationFrameId) {
-        cancelAnimationFrame(animationFrameId);
-        animationFrameId = null;
-    }
+    // Call backend stop
+    fetch('/api/stop').then(() => {
+        isRunning = false;
+        toggleBtn.textContent = "Start Simulation";
+        toggleBtn.classList.remove('stop');
+    
+        if (animationFrameId) {
+            cancelAnimationFrame(animationFrameId);
+            animationFrameId = null;
+        }
+    }).catch(err => console.error("Failed to stop:", err));
 }
 
 async function gameLoop() {

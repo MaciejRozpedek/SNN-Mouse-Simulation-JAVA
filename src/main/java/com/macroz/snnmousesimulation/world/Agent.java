@@ -9,6 +9,7 @@ public class Agent {
     private double x;
     @Setter
     private double y;
+    @Setter
     private double angle;
     // SNN instance
 

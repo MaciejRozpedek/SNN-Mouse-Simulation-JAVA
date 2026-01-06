@@ -1,7 +1,6 @@
 package com.macroz.snnmousesimulation.service;
 
 import com.macroz.snnmousesimulation.world.World;
-import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import org.springframework.stereotype.Service;
 
@@ -15,11 +14,14 @@ public class SimulationEngine {
     private ScheduledExecutorService scheduler;
 
     public SimulationEngine() {
-        this.world = new World(800, 600, 3);
+        this.world = new World(800, 600, 200);
     }
 
-    @PostConstruct
     public void startSimulation() {
+        if (scheduler != null && !scheduler.isShutdown()) {
+            return;
+        }
+
         scheduler = Executors.newSingleThreadScheduledExecutor(r -> {
             Thread t = new Thread(r, "Simulation-Loop");
             t.setDaemon(true);

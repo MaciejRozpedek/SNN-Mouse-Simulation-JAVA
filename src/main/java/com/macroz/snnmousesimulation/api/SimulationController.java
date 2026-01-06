@@ -16,6 +16,16 @@ public class SimulationController {
         this.simulationEngine = simulationEngine;
     }
 
+    @GetMapping("/start")
+    public void startSimulation() {
+        simulationEngine.startSimulation();
+    }
+
+    @GetMapping("/stop")
+    public void stopSimulation() {
+        simulationEngine.stopSimulation();
+    }
+
     @GetMapping("/state")
     public World getSimulationState() {
         return simulationEngine.getWorldState();
