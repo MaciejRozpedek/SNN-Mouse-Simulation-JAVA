@@ -1,5 +1,6 @@
 package com.macroz.snnmousesimulation.service;
 
+import com.macroz.snnmousesimulation.api.SimulationState;
 import com.macroz.snnmousesimulation.world.World;
 import jakarta.annotation.PreDestroy;
 import org.springframework.stereotype.Service;
@@ -14,7 +15,7 @@ public class SimulationEngine {
     private ScheduledExecutorService scheduler;
 
     public SimulationEngine() {
-        this.world = new World(800, 600, 200);
+        this.world = new World(800, 600, 50);
     }
 
     public void startSimulation() {
@@ -28,10 +29,11 @@ public class SimulationEngine {
             return t;
         });
 
+        // Run at 1ms -> 1000 TPS for high resolution and fast network updates
         scheduler.scheduleAtFixedRate(() -> tick(16), 0, 16, TimeUnit.MILLISECONDS);
     }
 
-    private void tick(double deltaTime) {
+    private synchronized void tick(double deltaTime) {
         world.update(deltaTime);
     }
 
@@ -42,7 +44,18 @@ public class SimulationEngine {
         }
     }
 
-    public World getWorldState() {
-        return world;
+    public synchronized SimulationState getSimulationState() {
+        var agent = world.getAgent();
+        var foodList = world.getFood();
+
+        var agentState = new SimulationState.AgentState(
+                agent.getX(), agent.getY(), agent.getAngle()
+        );
+
+        var foodStates = foodList.stream()
+                .map(f -> new SimulationState.FoodState(f.x(), f.y()))
+                .toList();
+
+        return new SimulationState(agentState, foodStates);
     }
 }

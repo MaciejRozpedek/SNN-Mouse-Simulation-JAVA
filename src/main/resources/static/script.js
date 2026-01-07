@@ -1,3 +1,22 @@
+/**
+ * @typedef {Object} AgentState
+ * @property {number} x
+ * @property {number} y
+ * @property {number} angle
+ */
+
+/**
+ * @typedef {Object} FoodState
+ * @property {number} x
+ * @property {number} y
+ */
+
+/**
+ * @typedef {Object} SimulationState
+ * @property {AgentState} agent
+ * @property {FoodState[]} food
+ */
+
 const canvas = document.getElementById('simCanvas');
 const ctx = canvas.getContext('2d');
 const toggleBtn = document.getElementById('toggleBtn');
@@ -10,15 +29,6 @@ const API_URL = '/api/state';
 let animationFrameId = null;
 let isRunning = false;
 
-/**
- * @typedef {Object} World
- * @property {Object} agent
- * @property {number} agent.x
- * @property {number} agent.y
- * @property {number} agent.angle
- * @property {Array<{x: number, y: number}>} food
- */
-
 function toggleSimulation() {
     if (isRunning) {
         stopSimulation();
@@ -29,8 +39,7 @@ function toggleSimulation() {
 
 function startSimulation() {
     if (isRunning) return;
-    
-    // Call backend start
+
     fetch('/api/start').then(() => {
         isRunning = true;
         toggleBtn.textContent = "Stop Simulation";
@@ -40,12 +49,11 @@ function startSimulation() {
 }
 
 function stopSimulation() {
-    // Call backend stop
     fetch('/api/stop').then(() => {
         isRunning = false;
         toggleBtn.textContent = "Start Simulation";
         toggleBtn.classList.remove('stop');
-    
+
         if (animationFrameId) {
             cancelAnimationFrame(animationFrameId);
             animationFrameId = null;
@@ -60,10 +68,10 @@ async function gameLoop() {
         const response = await fetch(API_URL);
 
         if (response.ok) {
-            /** @type {World} */
-            const worldData = await response.json();
-            render(worldData);
-            updateTelemetry(worldData);
+            /** @type {SimulationState} */
+            const data = await response.json();
+            render(data);
+            updateTelemetry(data);
         }
     } catch (error) {
         console.error("Simulation fetch error:", error);
@@ -75,26 +83,33 @@ async function gameLoop() {
 }
 
 /**
- * @param {World} world
+ * @param {SimulationState} world
  */
 function render(world) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    if (world.food && Array.isArray(world.food)) {
+    // Draw Food
+    if (world.food) {
         world.food.forEach(f => {
             drawEntity(f.x, f.y, 8, '#22c55e');
         });
     }
 
+    // Draw Agent
     if (world.agent) {
         drawAgent(world.agent.x, world.agent.y, world.agent.angle);
     }
 }
 
+/**
+ * @param {number} x
+ * @param {number} y
+ * @param {number} angle
+ */
 function drawAgent(x, y, angle) {
     ctx.save();
     ctx.translate(x, y);
-    ctx.rotate(angle);
+    ctx.rotate(angle); // Assumes angle is in Radians from backend
 
     // Agent Body
     ctx.beginPath();
@@ -107,7 +122,7 @@ function drawAgent(x, y, angle) {
     ctx.lineWidth = 2;
     ctx.stroke();
 
-    // Direction Indicator
+    // Direction Indicator (Nose)
     ctx.beginPath();
     ctx.moveTo(0, 0);
     ctx.lineTo(20, 0);
@@ -126,14 +141,15 @@ function drawEntity(x, y, radius, color) {
 }
 
 /**
- * @param {World} world
+ * @param {SimulationState} world
  */
 function updateTelemetry(world) {
     if (world.agent) {
         elMouseX.innerText = String(Math.round(world.agent.x));
         elMouseY.innerText = String(Math.round(world.agent.y));
     }
-    if (world.food && Array.isArray(world.food)) {
+
+    if (world.food) {
         elFoodCount.innerText = String(world.food.length);
     }
 }
