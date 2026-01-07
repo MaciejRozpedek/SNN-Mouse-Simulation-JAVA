@@ -3,6 +3,7 @@ package com.macroz.snnmousesimulation.loader;
 import com.macroz.snnmousesimulation.core.IzhikevichParams;
 import com.macroz.snnmousesimulation.core.SnnNetworkData;
 import com.macroz.snnmousesimulation.core.input.InputConfig;
+import com.macroz.snnmousesimulation.core.output.OutputConfig;
 import com.macroz.snnmousesimulation.exception.SnnParseException;
 import com.macroz.snnmousesimulation.loader.structure.GroupInfo;
 import com.macroz.snnmousesimulation.loader.structure.NeuronInfo;
@@ -34,6 +35,7 @@ public class NetworkTopologyLoader {
     private final Random random = new Random();
 
     private final List<InputConfig> inputConfigs = new ArrayList<>();
+    private final List<OutputConfig> outputConfigs = new ArrayList<>();
 
     public record GroupPair(GroupInfo from, GroupInfo to) {}
 
@@ -66,6 +68,11 @@ public class NetworkTopologyLoader {
             loadInputs(inputsNode);
         }
 
+        Node outputsNode = getChildNode(root, "outputs");
+        if (outputsNode != null) {
+            loadOutputs(outputsNode);
+        }
+
         return buildDto();
     }
 
@@ -92,7 +99,8 @@ public class NetworkTopologyLoader {
                 uArr,
                 targetsArr,
                 weightsArr,
-                new ArrayList<>(inputConfigs)
+                new ArrayList<>(inputConfigs),
+                new ArrayList<>(outputConfigs)
         );
     }
 
@@ -134,6 +142,46 @@ public class NetworkTopologyLoader {
                     name,
                     type,
                     targetNeurons.stream().mapToInt(i -> i).toArray(),
+                    params
+            ));
+        }
+    }
+
+    private void loadOutputs(Node node) {
+        if (!(node instanceof SequenceNode sequenceNode)) {
+            throw new SnnParseException("section 'outputs' must be a sequence.", node.getStartMark());
+        }
+
+        for (Node outputNode : sequenceNode.getValue()) {
+            String name = nodeAs(getChildNodeRequired(outputNode, "name"), String.class);
+            String strategyType = nodeAs(getChildNodeRequired(outputNode, "output_type"), String.class);
+            String sourceGroupPattern = nodeAs(getChildNodeRequired(outputNode, "source_group"), String.class);
+            String sourceType = nodeAs(getChildNodeRequired(outputNode, "source_type"), String.class);
+
+            Map<String, Object> params = new HashMap<>();
+            Node paramsNode = getChildNode(outputNode, "params");
+            if (paramsNode instanceof MappingNode mappingNode) {
+                for (NodeTuple tuple : mappingNode.getValue()) {
+                    String key = nodeAs(tuple.getKeyNode(), String.class);
+                    Object value = parseScalarValue((ScalarNode) tuple.getValueNode());
+                    params.put(key, value);
+                }
+            }
+
+            // Find the group (reusing your existing findMatchingGroups logic)
+            // We assume the source_group points to a specific single group
+            var sourceGroupPair = findMatchingGroups(sourceGroupPattern, sourceGroupPattern, false).stream()
+                    .filter(pair -> pair.from().getFullName().equals(pair.to().getFullName())) // Ensure it's the group itself
+                    .findFirst()
+                    .orElseThrow(() -> new SnnParseException("Output source group '" + sourceGroupPattern + "' not found.", outputNode.getStartMark()));
+
+            int sourceTypeId = sourceType.equals("all") ? -1 : getNeuronTypeId(sourceType, outputNode);
+            List<Integer> sourceNeurons = collectNeurons(sourceGroupPair.from(), sourceTypeId);
+
+            outputConfigs.add(new OutputConfig(
+                    name,
+                    strategyType,
+                    sourceNeurons.stream().mapToInt(i -> i).toArray(),
                     params
             ));
         }

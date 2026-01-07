@@ -1,6 +1,7 @@
 package com.macroz.snnmousesimulation.core;
 
 import com.macroz.snnmousesimulation.core.input.InputConfig;
+import com.macroz.snnmousesimulation.core.output.OutputConfig;
 
 import java.util.List;
 
@@ -13,5 +14,6 @@ public record SnnNetworkData(
     double[][] synapticWeights,// Weights matching the targets
 
 	// Agent data
-	List<InputConfig> inputConfigs
+	List<InputConfig> inputConfigs,
+	List<OutputConfig> outputConfigs
 ) {}

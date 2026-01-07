@@ -7,8 +7,14 @@ import com.macroz.snnmousesimulation.core.input.InputConfig;
 import com.macroz.snnmousesimulation.core.input.InputStrategy;
 import com.macroz.snnmousesimulation.core.input.InputStrategyFactory;
 import com.macroz.snnmousesimulation.core.input.InputSystem;
+import com.macroz.snnmousesimulation.core.output.OutputConfig;
+import com.macroz.snnmousesimulation.core.output.OutputStrategy;
+import com.macroz.snnmousesimulation.core.output.OutputStrategyFactory;
+import com.macroz.snnmousesimulation.core.output.OutputSystem;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.util.List;
 
 @Getter
 public class Agent {
@@ -23,11 +29,8 @@ public class Agent {
     private final SnnEngine engine;
     @JsonIgnore
     private final InputSystem inputSystem;
-
-
-    // PARAMETERS
-    private static final double SPEED_FACTOR = 2.0;
-    private static final double TURN_FACTOR = 0.1;
+    @JsonIgnore
+    private final OutputSystem outputSystem;
 
     public Agent(double startX, double startY, SnnNetworkData data) {
         this.x = startX;
@@ -36,13 +39,19 @@ public class Agent {
         // SNN initialization
         this.engine = new SnnEngine(data);
         this.inputSystem = new InputSystem();
+        this.outputSystem = new OutputSystem();
 
         if (data.inputConfigs() != null) {
             for (InputConfig config : data.inputConfigs()) {
-
                 InputStrategy strategy = InputStrategyFactory.create(config.sensorType(), config.params());
-
                 inputSystem.addInput(config.targetNeuronIndices(), strategy);
+            }
+        }
+
+        if (data.outputConfigs() != null) {
+            for (OutputConfig config : data.outputConfigs()) {
+                OutputStrategy strategy = OutputStrategyFactory.create(config.outputType(), config.params());
+                outputSystem.addOutput(config.sourceNeuronIndices(), strategy);
             }
         }
     }
@@ -55,10 +64,10 @@ public class Agent {
         }
 
         // 2. BRAIN PROCESS - Run one time step
-        engine.step(deltaTime);
+        List<Integer> firedIndices = engine.step(deltaTime);
 
         // 3. RESPONSE - Interpret outputs and move
-
+        outputSystem.processOutputs(this, firedIndices, deltaTime);
     }
 
     // Executes one tick of the agent's life.
@@ -89,15 +98,9 @@ public class Agent {
         throw new UnsupportedOperationException("Not implemented yet.");
     }
 
-    private double[] calculateSensoryInput(double distToFood, double angleToFood){
-        // Implementation of sensor transformation
-        return new double[]{ /* currents */ };
-    }
-
-    private void move(double speed, double rotation) {
+    public void move(double speed, double rotation) {
         this.angle += rotation;
         this.x += Math.cos(this.angle) * speed;
         this.y += Math.sin(this.angle) * speed;
     }
-
 }

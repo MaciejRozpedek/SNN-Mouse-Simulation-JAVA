@@ -62,6 +62,18 @@ inputs:
       overlap_factor: 1.5
       max_current: 10.0
 
+  # -----------------------------------------------------------------------------
+  # 3. Output Definitions
+  # -----------------------------------------------------------------------------
+outputs:
+  - name: MotorControl
+    output_type: POPULATION_DRIVE
+    source_group: Cortex.Layer3  # Uses the whole Layer3 group
+    source_type: RS              # Only looks at RS neurons in that layer
+    params:
+      speed_per_spike: 2.0
+      turn_factor: 0.1
+
 # -----------------------------------------------------------------------------
 # 4. Connection Rules
 # -----------------------------------------------------------------------------
