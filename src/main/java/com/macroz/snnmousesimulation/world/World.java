@@ -40,8 +40,6 @@ public class World {
     public void update(double deltaTime) {
         Food closestFood = null;
         double minDistanceSquared = Double.MAX_VALUE;
-        double dxToClosest = 0;
-        double dyToClosest = 0;
 
         for (Food f : food) {
             double dx = f.x() - agent.getX();
@@ -51,17 +49,11 @@ public class World {
             if (distSq < minDistanceSquared) {
                 minDistanceSquared = distSq;
                 closestFood = f;
-                dxToClosest = dx;
-                dyToClosest = dy;
             }
         }
-        double distance = Math.sqrt(minDistanceSquared);
-        double globalAngleToFood = Math.atan2(dyToClosest, dxToClosest);
-        double relativeAngle = normalizeAngle(globalAngleToFood - agent.getAngle());
 
         // TODO: Pass world state instead of World class. Change InputSystem and InputStrategies accordingly.
         agent.update(this, deltaTime);
-//        agent.update(distance, relativeAngle);
         handleBoundaries();
 
         if (closestFood != null) {

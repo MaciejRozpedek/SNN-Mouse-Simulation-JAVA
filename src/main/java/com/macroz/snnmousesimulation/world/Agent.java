@@ -95,7 +95,7 @@ public class Agent {
     }
 
     public void applyReward(){
-        throw new UnsupportedOperationException("Not implemented yet.");
+        engine.injectDopamine(5.0);
     }
 
     public void move(double speed, double rotation) {
