@@ -15,6 +15,12 @@ public class SnnEngine {
     private static final double A_MINUS = 0.012;
     private static final double MAX_WEIGHT = 10000.0;
 
+    // dopamine
+    private static final double TAU_C = 1000.0;
+    private static final double TAU_D = 20.0;
+    private double dopamineLevel = 0.0;
+    private final double[][] eligibilityTraces;
+
     @Getter
     private final int totalNeuronCount;
     private final List<IzhikevichParams> neuronParamTypes;
@@ -28,6 +34,7 @@ public class SnnEngine {
     private final double[][] synapticWeights;
 
     private final int[][] synapticSources;
+    private final int[][] synapticSourceIndices;
     private final double[] presynapticTrace;
     private final double[] postsynapticTrace;
 
@@ -57,15 +64,27 @@ public class SnnEngine {
         }
 
         this.synapticSources = new int[totalNeuronCount][];
+        this.synapticSourceIndices = new int[totalNeuronCount][];
         for (int i = 0; i < totalNeuronCount; i++) {
             this.synapticSources[i] = new int[inputCounts[i]];
+            this.synapticSourceIndices[i] = new int[inputCounts[i]];
         }
 
         int[] currentFillIndex = new int[totalNeuronCount];
         for (int pre = 0; pre < totalNeuronCount; pre++) {
-            for (int target : synapticTargets[pre]) {
-                this.synapticSources[target][currentFillIndex[target]++] = pre;
+            int[] targets = synapticTargets[pre];
+            for (int k = 0; k < targets.length; k++) {
+                int post = targets[k];
+                int fillIdx = currentFillIndex[post];
+                this.synapticSources[post][fillIdx] = pre;
+                this.synapticSourceIndices[post][fillIdx] = k;
+                currentFillIndex[post]++;
             }
+        }
+
+        this.eligibilityTraces = new double[totalNeuronCount][];
+        for (int i = 0; i < totalNeuronCount; i++) {
+            this.eligibilityTraces[i] = new double[synapticTargets[i].length];
         }
     }
 
@@ -115,6 +134,9 @@ public class SnnEngine {
         // 4. Update Synaptic Traces
         updateSynapticTraces(dt);
 
+        // 5. Update Weights and Dopamine
+        updateWeightsAndTraces(dt);
+
         stepCount++;
         return firedIndices;
     }
@@ -129,29 +151,55 @@ public class SnnEngine {
         }
     }
 
+    private void updateWeightsAndTraces(double dt) {
+        double decayTrace = Math.exp(-dt / TAU_C);
+        double decayDopamine = Math.exp(-dt / TAU_D);
+
+
+        boolean isDopamineActive = Math.abs(dopamineLevel) > 1e-6;
+
+        for (int i = 0; i < totalNeuronCount; i++) {
+            double[] traces = eligibilityTraces[i];
+            if (isDopamineActive) {
+                double[] weights = synapticWeights[i];
+                for (int k = 0; k < weights.length; k++) {
+                    double weightChange = traces[k] * dopamineLevel * dt;
+
+                    if (weightChange != 0) {
+                        weights[k] += weightChange;
+                        if (weights[k] > MAX_WEIGHT) weights[k] = MAX_WEIGHT;
+                        if (weights[k] < 0) weights[k] = 0;
+                    }
+                    traces[k] *= decayTrace;
+                }
+            } else {
+                for (int k = 0; k < traces.length; k++) {
+                    traces[k] *= decayTrace;
+                }
+            }
+        }
+
+        dopamineLevel *= decayDopamine;
+    }
+
     private void applySTDP(List<Integer> firedIndices) {
         for (int firedNeuron : firedIndices) {
             // LTP
-            for (int preNeuron : synapticSources[firedNeuron]) {
-                int[] targetsOfPre = synapticTargets[preNeuron];
-                double[] weightsOfPre = synapticWeights[preNeuron];
-
-                for (int k = 0; k < targetsOfPre.length; k++) {
-                    if (targetsOfPre[k] == firedNeuron) {
-                        double deltaW = A_PLUS * presynapticTrace[preNeuron];
-                        weightsOfPre[k] = Math.min(MAX_WEIGHT, weightsOfPre[k] + deltaW);
-                        break;
-                    }
-                }
+            int[] sources = synapticSources[firedNeuron];
+            int[] sourceIndices = synapticSourceIndices[firedNeuron];
+            for (int i = 0; i < sources.length; i++) {
+                int preNeuron = sources[i];
+                int k = sourceIndices[i];
+                double deltaW = A_PLUS * presynapticTrace[preNeuron];
+                eligibilityTraces[preNeuron][k] += deltaW;
             }
 
             // LTD
             int[] targets = synapticTargets[firedNeuron];
-            double[] weights = synapticWeights[firedNeuron];
             for (int k = 0; k < targets.length; k++) {
                 int postNeuron = targets[k];
                 double deltaW = -A_MINUS * postsynapticTrace[postNeuron];
-                weights[k] = Math.max(0.0, weights[k] + deltaW);
+                eligibilityTraces[firedNeuron][k] += deltaW;
             }
         }
 
@@ -160,6 +208,10 @@ public class SnnEngine {
             presynapticTrace[firedNeuron] += 1.0;
             postsynapticTrace[firedNeuron] += 1.0;
         }
+    }
+
+    public void injectDopamine(double amount) {
+        this.dopamineLevel += amount;
     }
 
     public void addInputCurrent(int[] neuronIndices, double[] currents) {
