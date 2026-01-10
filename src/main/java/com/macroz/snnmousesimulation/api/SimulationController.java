@@ -1,9 +1,12 @@
 package com.macroz.snnmousesimulation.api;
 
 import com.macroz.snnmousesimulation.service.SimulationEngine;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 @RestController
 @RequestMapping("/api")
@@ -15,18 +18,18 @@ public class SimulationController {
         this.simulationEngine = simulationEngine;
     }
 
-    @GetMapping("/start")
+    @PostMapping("/start")
     public void startSimulation() {
         simulationEngine.startSimulation();
     }
 
-    @GetMapping("/stop")
+    @PostMapping("/stop")
     public void stopSimulation() {
         simulationEngine.stopSimulation();
     }
 
-    @GetMapping("/state")
-    public SimulationState getSimulationState() {
-        return simulationEngine.getSimulationState();
+    @GetMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public SseEmitter streamSimulation() {
+        return simulationEngine.subscribe();
     }
 }

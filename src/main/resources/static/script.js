@@ -15,6 +15,7 @@
  * @typedef {Object} SimulationState
  * @property {AgentState} agent
  * @property {FoodState[]} food
+ * @property {number} timestamp
  */
 
 const canvas = document.getElementById('simCanvas');
@@ -24,10 +25,10 @@ const elMouseX = document.getElementById('mouseX');
 const elMouseY = document.getElementById('mouseY');
 const elFoodCount = document.getElementById('foodCount');
 
-const API_URL = '/api/state';
-
+let eventSource = null;
 let animationFrameId = null;
 let isRunning = false;
+let latestWorldState = null;
 
 function toggleSimulation() {
     if (isRunning) {
@@ -40,19 +41,42 @@ function toggleSimulation() {
 function startSimulation() {
     if (isRunning) return;
 
-    fetch('/api/start').then(() => {
+    fetch('/api/start', { method: 'POST'}).then(() => {
         isRunning = true;
         toggleBtn.textContent = "Stop Simulation";
         toggleBtn.classList.add('stop');
-        gameLoop().catch(console.error);
+        
+        // Open SSE connection
+        eventSource = new EventSource('/api/stream');
+        
+        eventSource.addEventListener('state', (event) => {
+            latestWorldState = JSON.parse(event.data);
+        });
+        
+        eventSource.onerror = (err) => {
+            console.error("SSE connection error:", err);
+            if (!isRunning && eventSource) {
+                eventSource.close();
+                eventSource = null;
+            }
+        };
+        
+        // Start render loop
+        renderLoop();
     }).catch(err => console.error("Failed to start:", err));
 }
 
 function stopSimulation() {
-    fetch('/api/stop').then(() => {
+    fetch('/api/stop', { method: 'POST'}).then(() => {
         isRunning = false;
         toggleBtn.textContent = "Start Simulation";
         toggleBtn.classList.remove('stop');
+
+        // Close SSE connection
+        if (eventSource) {
+            eventSource.close();
+            eventSource = null;
+        }
 
         if (animationFrameId) {
             cancelAnimationFrame(animationFrameId);
@@ -61,25 +85,15 @@ function stopSimulation() {
     }).catch(err => console.error("Failed to stop:", err));
 }
 
-async function gameLoop() {
+function renderLoop() {
     if (!isRunning) return;
 
-    try {
-        const response = await fetch(API_URL);
-
-        if (response.ok) {
-            /** @type {SimulationState} */
-            const data = await response.json();
-            render(data);
-            updateTelemetry(data);
-        }
-    } catch (error) {
-        console.error("Simulation fetch error:", error);
+    if (latestWorldState) {
+        render(latestWorldState);
+        updateTelemetry(latestWorldState);
     }
 
-    if (isRunning) {
-        animationFrameId = requestAnimationFrame(gameLoop);
-    }
+    animationFrameId = requestAnimationFrame(renderLoop);
 }
 
 /**
@@ -91,7 +105,7 @@ function render(world) {
     // Draw Food
     if (world.food) {
         world.food.forEach(f => {
-            drawEntity(f.x, f.y, 8, '#22c55e');
+            drawEntity(f.x, f.y, 10, '#22c55e');
         });
     }
 
@@ -109,34 +123,106 @@ function render(world) {
 function drawAgent(x, y, angle) {
     ctx.save();
     ctx.translate(x, y);
-    ctx.rotate(angle); // Assumes angle is in Radians from backend
+    ctx.rotate(angle);
 
-    // Agent Body
+    // --- VISION FLASHLIGHT ---
+
+    ctx.save();
+    const visionRadius = 250; // Increased slightly
+    const fov = 120 * (Math.PI / 180); 
+    
     ctx.beginPath();
-    ctx.arc(0, 0, 15, 0, Math.PI * 2);
-    ctx.fillStyle = '#2563eb'; // Blue
-    ctx.fill();
+    ctx.moveTo(0, 0);
+    ctx.arc(0, 0, visionRadius, -fov / 2, fov / 2);
+    ctx.closePath();
 
-    // Agent Border
-    ctx.strokeStyle = '#1e40af';
+    const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, visionRadius);
+    gradient.addColorStop(0, 'rgba(255, 200, 50, 0.6)'); 
+    gradient.addColorStop(0.5, 'rgba(255, 220, 100, 0.3)');
+    gradient.addColorStop(1, 'rgba(255, 255, 100, 0)');
+    
+    ctx.fillStyle = gradient;
+    ctx.fill();
+    ctx.restore();
+
+    // --- MOUSE BODY & DETAILS ---
+    
+    // Tail
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(-10, 0);
+    ctx.bezierCurveTo(-25, 5, -30, -10, -40, -5);
+    ctx.strokeStyle = '#pink';
+    ctx.lineWidth = 3;
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = '#eca1a6';
+    ctx.stroke();
+    ctx.restore();
+
+    // Body (Elongated)
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 20, 14, 0, 0, Math.PI * 2); 
+    ctx.fillStyle = '#64748b';
+    ctx.fill();
+    ctx.strokeStyle = '#475569';
     ctx.lineWidth = 2;
     ctx.stroke();
 
-    // Direction Indicator (Nose)
+    // Ears
+    ctx.fillStyle = '#64748b';
+    ctx.strokeStyle = '#475569';
+    
+    // Left Ear
     ctx.beginPath();
-    ctx.moveTo(0, 0);
-    ctx.lineTo(20, 0);
-    ctx.strokeStyle = 'white';
-    ctx.lineWidth = 2;
+    ctx.arc(8, -12, 6, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    
+    // Right Ear
+    ctx.beginPath();
+    ctx.arc(8, 12, 6, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+
+    // Eyes
+    ctx.fillStyle = 'black';
+    ctx.beginPath();
+    ctx.arc(12, -5, 2, 0, Math.PI * 2); // Left eye
+    ctx.arc(12, 5, 2, 0, Math.PI * 2);  // Right eye
+    ctx.fill();
+
+    // Nose
+    ctx.fillStyle = '#fda4af';
+    ctx.beginPath();
+    ctx.arc(18, 0, 3, 0, Math.PI*2);
+    ctx.fill();
+    
+    // Whiskers
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    
+    // Left Whiskers
+    ctx.moveTo(18, -2); ctx.lineTo(28, -8);
+    ctx.moveTo(18, -2); ctx.lineTo(28, -5);
+    
+    // Right Whiskers
+    ctx.moveTo(18, 2); ctx.lineTo(28, 8);
+    ctx.moveTo(18, 2); ctx.lineTo(28, 5);
     ctx.stroke();
 
     ctx.restore();
 }
 
 function drawEntity(x, y, radius, color) {
+    // Draw a "3D" Pellet
+    const grad = ctx.createRadialGradient(x - radius/3, y - radius/3, radius/4, x, y, radius);
+    grad.addColorStop(0, '#ef86c7');
+    grad.addColorStop(1, '#a31639');
+    
     ctx.beginPath();
     ctx.arc(x, y, radius, 0, Math.PI * 2);
-    ctx.fillStyle = color;
+    ctx.fillStyle = grad;
     ctx.fill();
 }
 
