@@ -70,30 +70,6 @@ public class Agent {
         outputSystem.processOutputs(this, firedIndices, deltaTime);
     }
 
-    // Executes one tick of the agent's life.
-    public void update_old(double distanceToFood, double angleToFood) {
-        // 1. SENSORS - Convert physical distance/angle into input current for the network
-        // 2. BRAIN PROCESS - Feed inputs to SNN and run one time step
-        // 3. MOTORS (Movement Logic) - Interpret specific output neurons as "Left Motor" and "Right Motor"
-
-        // Differential steering logic
-
-        // double speed = 0;
-        // double rotation = 0;
-        //
-        // if (leftMotorActive) {
-        //    speed += SPEED_FACTOR;
-        //    rotation += TURN_FACTOR; // Turn right
-        // }
-        // if (rightMotorActive) {
-        //    speed += SPEED_FACTOR;
-        //    rotation -= TURN_FACTOR; // Turn left
-        // }
-
-        // Apply movement physics
-        // move(speed, rotation);
-    }
-
     public void applyReward(){
         engine.injectDopamine(5.0);
     }
