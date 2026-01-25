@@ -24,7 +24,7 @@ public class World {
     private final Random random = new Random();
 
     // PARAMETERS
-    private static final double EAT_RADIUS = 10.0;
+    private static final double EAT_RADIUS = 30.0;
 
     public World(double width, double height, int numberOfFood) {
         this.width = width;
@@ -52,7 +52,6 @@ public class World {
             }
         }
 
-        // TODO: Pass world state instead of World class. Change InputSystem and InputStrategies accordingly.
         agent.update(this, deltaTime);
         handleBoundaries();
 
@@ -123,9 +122,6 @@ public class World {
             agent.setX(x);
             agent.setY(y);
             agent.setAngle(normalizeAngle(angle));
-            
-            // Penalize or Reset SNN?
-            // agent.applyPunishment(); 
         }
     }
 }

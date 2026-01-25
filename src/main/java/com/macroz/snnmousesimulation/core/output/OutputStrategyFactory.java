@@ -1,6 +1,6 @@
 package com.macroz.snnmousesimulation.core.output;
 
-import com.macroz.snnmousesimulation.core.output.concrete.DifferentialDriveStrategy;
+import com.macroz.snnmousesimulation.core.output.concrete.PopulationDriveStrategy;
 
 import java.util.Map;
 
@@ -15,7 +15,7 @@ public class OutputStrategyFactory {
 
     private static OutputStrategy createPopulationDrive(Map<String, Object> params) {
         double speed = ((Number) params.getOrDefault("speed_per_spike", 0.5)).doubleValue();
-        double turn = ((Number) params.getOrDefault("turn_factor", 0.05)).doubleValue();
-        return new DifferentialDriveStrategy(speed, turn);
+        double turn = ((Number) params.getOrDefault("turn_factor", 0.03)).doubleValue();
+        return new PopulationDriveStrategy(speed, turn);
     }
 }

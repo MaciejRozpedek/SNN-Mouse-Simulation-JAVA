@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SNN Mouse Simulation</title>
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body>
 
@@ -17,19 +17,24 @@
 
     <div class="control-panel">
         <button id="toggleBtn" class="btn primary">Start Simulation</button>
+        
+        <div class="speed-control" style="color: var(--neon-cyan); font-family: 'Roboto Mono', monospace;">
+            <label for="speedRange" style="display: block; margin-bottom: 0.5rem; font-size: 0.8rem;">SPEED x<span id="speedValue">1.0</span></label>
+            <input type="range" id="speedRange" min="0.1" max="1.0" step="0.1" value="1.0" style="width: 100%; accent-color: var(--neon-cyan);">
+        </div>
 
         <div class="telemetry">
-            <h3>Telemetry</h3>
+            <h3>SYSTEM TELEMETRY</h3>
             <div class="telemetry-item">
-                <label>Mouse X</label>
-                <span id="mouseX">0</span>
+                <label>COORD_X</label>
+                <span id="mouseX">000</span>
             </div>
             <div class="telemetry-item">
-                <label>Mouse Y</label>
-                <span id="mouseY">0</span>
+                <label>COORD_Y</label>
+                <span id="mouseY">000</span>
             </div>
             <div class="telemetry-item">
-                <label>Food Count</label>
+                <label>TARGETS</label>
                 <span id="foodCount">0</span>
             </div>
         </div>
@@ -41,7 +46,7 @@
 </aside>
 
 <main class="simulation-view">
-    <canvas id="simCanvas" width="800" height="600"></canvas>
+    <canvas id="simCanvas" width="1000" height="800"></canvas>
 </main>
 
 <script src="script.js"></script>

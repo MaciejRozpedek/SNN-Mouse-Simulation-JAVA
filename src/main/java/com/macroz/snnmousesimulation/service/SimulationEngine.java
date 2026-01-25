@@ -9,34 +9,54 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 @Service
 public class SimulationEngine {
-    private static final long TICK_RATE_MS = 16; // ~60 FPS
-    
+    private static final long TICK_RATE_MS = 16; 
+
+    private volatile double speedMultiplier = 1.0;
+    private volatile boolean running = false;
+    private Thread simulationThread;
+
     private final World world;
     private final List<SseEmitter> emitters = new CopyOnWriteArrayList<>();
-    private ScheduledExecutorService scheduler;
 
     public SimulationEngine() {
-        this.world = new World(800, 600, 100);
+        this.world = new World(1000, 800, 100);
+    }
+
+    public void setSpeedMultiplier(double multiplier) {
+        this.speedMultiplier = Math.max(0.1, Math.min(1.0, multiplier));
     }
 
     public void startSimulation() {
-        if (scheduler != null && !scheduler.isShutdown()) {
-            return;
+        if (running) return;
+
+        running = true;
+        simulationThread = new Thread(this::runLoop, "Simulation-Loop");
+        simulationThread.setDaemon(true);
+        simulationThread.start();
+    }
+
+    private void runLoop() {
+        while (running) {
+            long startTime = System.currentTimeMillis();
+
+            tick(TICK_RATE_MS);
+
+            long targetInterval = (long) (TICK_RATE_MS / speedMultiplier);
+            long processTime = System.currentTimeMillis() - startTime;
+            long sleepTime = targetInterval - processTime;
+
+            if (sleepTime > 0) {
+                try {
+                    Thread.sleep(sleepTime);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    running = false;
+                }
+            }
         }
-
-        scheduler = Executors.newSingleThreadScheduledExecutor(r -> {
-            Thread t = new Thread(r, "Simulation-Loop");
-            t.setDaemon(true);
-            return t;
-        });
-
-        scheduler.scheduleAtFixedRate(() -> tick(TICK_RATE_MS), 0, TICK_RATE_MS, TimeUnit.MILLISECONDS);
     }
 
     private void tick(double deltaTime) {
@@ -79,8 +99,14 @@ public class SimulationEngine {
 
     @PreDestroy
     public void stopSimulation() {
-        if (scheduler != null) {
-            scheduler.shutdown();
+        running = false;
+        if (simulationThread != null) {
+            try {
+                simulationThread.join(1000);
+            } catch (InterruptedException e) {
+                System.err.println("Failed to join simulation thread");
+            }
+            simulationThread = null;
         }
 
         for (SseEmitter emitter : emitters) {

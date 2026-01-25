@@ -1,11 +1,13 @@
 :root {
-    --primary-color: #2563eb;
-    --primary-hover: #1d4ed8;
-    --sidebar-bg: #ffffff;
-    --main-bg: #f8fafc;
-    --text-main: #0f172a;
-    --text-sub: #64748b;
-    --border-color: #e2e8f0;
+    --bg-dark: #1A202C;
+    --bg-panel: #2D3748;
+    --grid-color: rgba(0, 255, 255, 0.1);
+    --neon-green: #00ff41;
+    --neon-cyan: #00ffff;
+    --text-main: #e2e8f0;
+    --text-dim: #94a3b8;
+    --primary-color: #00ffff;
+    --primary-hover: #00cccc;
 }
 
 * {
@@ -20,33 +22,37 @@ body {
     width: 100vw;
     display: flex;
     overflow: hidden;
+    background-color: var(--bg-dark);
+    color: var(--text-main);
 }
 
-/* --- SIDEBAR --- */
 .sidebar {
     width: 300px;
-    background-color: var(--sidebar-bg);
-    border-right: 1px solid var(--border-color);
+    background-color: #111827; /* Darker than main bg */
+    border-right: 1px solid #374151;
     display: flex;
     flex-direction: column;
     padding: 2rem;
     gap: 2rem;
     flex-shrink: 0;
-    z-index: 10;
-    box-shadow: 4px 0 24px rgba(0,0,0,0.02);
+    z-index: 20;
+    box-shadow: 4px 0 24px rgba(0,0,0,0.5);
 }
 
 .brand h1 {
     font-size: 1.5rem;
     font-weight: 800;
-    color: var(--text-main);
-    letter-spacing: -0.02em;
+    color: var(--neon-cyan);
+    letter-spacing: 0.05em;
+    text-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+    font-family: 'Roboto Mono', monospace;
 }
 
 .brand p {
-    color: var(--text-sub);
+    color: var(--text-dim);
     font-size: 0.85rem;
     margin-top: 0.25rem;
+    font-family: 'Roboto Mono', monospace;
 }
 
 .control-panel {
@@ -58,43 +64,76 @@ body {
 .btn {
     width: 100%;
     padding: 12px;
-    border-radius: 8px;
-    border: none;
+    border-radius: 4px;
+    border: 1px solid var(--neon-cyan);
+    background: transparent;
     font-weight: 600;
     cursor: pointer;
     font-size: 1rem;
     transition: all 0.2s;
-}
-
-.btn.primary {
-    background-color: var(--primary-color);
-    color: white;
-    box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
+    font-family: 'Roboto Mono', monospace;
+    color: var(--neon-cyan);
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
 .btn.primary:hover {
-    background-color: var(--primary-hover);
-    transform: translateY(-1px);
+    background-color: rgba(0, 255, 255, 0.1);
+    box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+}
+
+.btn.primary:active {
+    transform: scale(0.98);
 }
 
 .btn.stop {
-    background-color: #ef4444;
-    box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.2);
+    border-color: #ff0055;
+    color: #ff0055;
+}
+
+.btn.stop:hover {
+    background-color: rgba(255, 0, 85, 0.1);
+    box-shadow: 0 0 15px rgba(255, 0, 85, 0.3);
+}
+
+.sidebar-footer {
+    margin-top: auto;
+    color: #4b5563;
+    font-size: 0.75rem;
+    text-align: center;
+    font-family: 'Roboto Mono', monospace;
+}
+
+.simulation-view {
+    flex-grow: 1;
+    background-color: var(--bg-dark);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+
+    background-image: 
+        linear-gradient(var(--grid-color) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+    background-size: 40px 40px;
+    background-position: center center;
 }
 
 .telemetry {
-    background: #f8fafc;
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--neon-green);
+    border-radius: 4px;
     padding: 1rem;
+    font-family: 'Roboto Mono', monospace;
 }
 
 .telemetry h3 {
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    color: var(--text-sub);
+    color: var(--neon-green);
+    font-size: 0.8rem;
     margin-bottom: 1rem;
-    letter-spacing: 0.05em;
+    border-bottom: 1px solid rgba(0, 255, 65, 0.3);
+    padding-bottom: 0.5rem;
+    letter-spacing: 0.1em;
 }
 
 .telemetry-item {
@@ -102,35 +141,22 @@ body {
     justify-content: space-between;
     margin-bottom: 0.5rem;
     font-size: 0.9rem;
-    color: var(--text-main);
+    color: #fff;
 }
 
 .telemetry-item label {
-    font-family: monospace;
-    color: var(--text-sub);
+    color: var(--text-dim);
+    font-size: 0.8rem;
 }
 
-.sidebar-footer {
-    margin-top: auto;
-    color: #94a3b8;
-    font-size: 0.75rem;
-    text-align: center;
-}
-
-.simulation-view {
-    flex-grow: 1;
-    background-color: var(--main-bg);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    position: relative;
-    background-image: radial-gradient(#cbd5e1 2px, transparent 2px);
-    background-size: 30px 30px;
+.telemetry-item span {
+    color: var(--neon-green);
+    font-weight: 700;
 }
 
 canvas {
     display: block;
-    background-color: #ffffff;
-    border-radius: 12px;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    background-color: transparent; 
+    border: 1px solid #374151;
+    box-shadow: 0 0 50px rgba(0,0,0,0.5);
 }

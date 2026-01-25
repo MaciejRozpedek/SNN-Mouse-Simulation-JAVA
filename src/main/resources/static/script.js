@@ -25,6 +25,17 @@ const elMouseX = document.getElementById('mouseX');
 const elMouseY = document.getElementById('mouseY');
 const elFoodCount = document.getElementById('foodCount');
 
+const speedRange = document.getElementById('speedRange');
+const speedValue = document.getElementById('speedValue');
+
+speedRange.addEventListener('input', (e) => {
+    speedValue.innerText = e.target.value;
+});
+
+speedRange.addEventListener('change', (e) => {
+    fetch(`/api/speed?multiplier=${e.target.value}`, { method: 'POST' }).catch(console.error);
+});
+
 let eventSource = null;
 let animationFrameId = null;
 let isRunning = false;
@@ -45,8 +56,7 @@ function startSimulation() {
         isRunning = true;
         toggleBtn.textContent = "Stop Simulation";
         toggleBtn.classList.add('stop');
-        
-        // Open SSE connection
+
         eventSource = new EventSource('/api/stream');
         
         eventSource.addEventListener('state', (event) => {
@@ -60,8 +70,7 @@ function startSimulation() {
                 eventSource = null;
             }
         };
-        
-        // Start render loop
+
         renderLoop();
     }).catch(err => console.error("Failed to start:", err));
 }
@@ -72,7 +81,6 @@ function stopSimulation() {
         toggleBtn.textContent = "Start Simulation";
         toggleBtn.classList.remove('stop');
 
-        // Close SSE connection
         if (eventSource) {
             eventSource.close();
             eventSource = null;
@@ -125,8 +133,6 @@ function drawAgent(x, y, angle) {
     ctx.translate(x, y);
     ctx.rotate(angle);
 
-    // --- VISION FLASHLIGHT ---
-
     ctx.save();
     const visionRadius = 250; // Increased slightly
     const fov = 120 * (Math.PI / 180); 
@@ -145,8 +151,6 @@ function drawAgent(x, y, angle) {
     ctx.fill();
     ctx.restore();
 
-    // --- MOUSE BODY & DETAILS ---
-    
     // Tail
     ctx.save();
     ctx.beginPath();
@@ -159,7 +163,7 @@ function drawAgent(x, y, angle) {
     ctx.stroke();
     ctx.restore();
 
-    // Body (Elongated)
+    // Body
     ctx.beginPath();
     ctx.ellipse(0, 0, 20, 14, 0, 0, Math.PI * 2); 
     ctx.fillStyle = '#64748b';
@@ -215,15 +219,15 @@ function drawAgent(x, y, angle) {
 }
 
 function drawEntity(x, y, radius, color) {
-    // Draw a "3D" Pellet
-    const grad = ctx.createRadialGradient(x - radius/3, y - radius/3, radius/4, x, y, radius);
-    grad.addColorStop(0, '#ef86c7');
-    grad.addColorStop(1, '#a31639');
+    ctx.save();
+    ctx.shadowBlur = 10;
+    ctx.shadowColor = '#00ff41';
     
     ctx.beginPath();
-    ctx.arc(x, y, radius, 0, Math.PI * 2);
-    ctx.fillStyle = grad;
+    ctx.arc(x, y, 6, 0, Math.PI * 2); // Slightly smaller but glowing
+    ctx.fillStyle = '#00ff41';
     ctx.fill();
+    ctx.restore();
 }
 
 /**

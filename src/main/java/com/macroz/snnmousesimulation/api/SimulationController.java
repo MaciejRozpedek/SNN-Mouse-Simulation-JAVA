@@ -28,6 +28,11 @@ public class SimulationController {
         simulationEngine.stopSimulation();
     }
 
+    @PostMapping("/speed")
+    public void setSpeed(@org.springframework.web.bind.annotation.RequestParam double multiplier) {
+        simulationEngine.setSpeedMultiplier(multiplier);
+    }
+
     @GetMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter streamSimulation() {
         return simulationEngine.subscribe();

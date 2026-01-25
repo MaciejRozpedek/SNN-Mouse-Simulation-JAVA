@@ -3,12 +3,12 @@ package com.macroz.snnmousesimulation.core.output.concrete;
 import com.macroz.snnmousesimulation.core.output.OutputStrategy;
 import com.macroz.snnmousesimulation.world.Agent;
 
-public class DifferentialDriveStrategy implements OutputStrategy {
+public class PopulationDriveStrategy implements OutputStrategy {
 
     private final double speedPerSpike;
     private final double turnFactor;
 
-    public DifferentialDriveStrategy(double speedPerSpike, double turnFactor) {
+    public PopulationDriveStrategy(double speedPerSpike, double turnFactor) {
         this.speedPerSpike = speedPerSpike;
         this.turnFactor = turnFactor;
     }
