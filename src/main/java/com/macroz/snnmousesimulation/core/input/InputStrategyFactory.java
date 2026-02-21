@@ -1,30 +1,34 @@
 package com.macroz.snnmousesimulation.core.input;
 
 import com.macroz.snnmousesimulation.core.input.concrete.GaussianVisionStrategy;
+import com.macroz.snnmousesimulation.exception.AgentConfigurationException;
+import com.macroz.snnmousesimulation.exception.AgentConfigurationException.StrategyType;
 
+import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Function;
 
 public class InputStrategyFactory {
 
-	public static InputStrategy create(String inputType, Map<String, Object> params) {
-		return switch (inputType.toUpperCase()) {
-			case "EXAMPLE" -> createExampleStrategy(params);
-			case "GAUSSIAN_VISION" -> createSectorVisionStrategy(params);
-			default -> throw new IllegalArgumentException("Unknown input type: " + inputType);
-		};
-	}
+    private static final Map<String, Function<Map<String, Object>, InputStrategy>> REGISTRY = new HashMap<>();
 
-	private static InputStrategy createExampleStrategy(Map<String, Object> params) {
-		// Extract parameters from the map and create the strategy
-		throw new UnsupportedOperationException("Not implemented yet");
-	}
+    static {
+        register("GAUSSIAN_VISION", GaussianVisionStrategy::create);
+    }
 
-	private static InputStrategy createSectorVisionStrategy(Map<String, Object> params) {
-		return new GaussianVisionStrategy(
-			((Number) params.getOrDefault("fov", 120)).doubleValue(),
-			((Number) params.getOrDefault("range", 200)).doubleValue(),
-			((Number) params.getOrDefault("overlap_factor", 1.5)).doubleValue(),
-			((Number) params.getOrDefault("max_current", 10)).doubleValue()
-		);
-	}
+    public static void register(String type, Function<Map<String, Object>, InputStrategy> factory) {
+        REGISTRY.put(type.toUpperCase(), factory);
+    }
+
+    public static InputStrategy create(String inputType, Map<String, Object> params) {
+        var factory = REGISTRY.get(inputType.toUpperCase());
+        if (factory == null) {
+            throw new IllegalArgumentException("Unknown input type: " + inputType + ". Available: " + REGISTRY.keySet());
+        }
+        try {
+            return factory.apply(params);
+        } catch (Exception e) {
+            throw new AgentConfigurationException(StrategyType.INPUT, inputType, params, e);
+        }
+    }
 }

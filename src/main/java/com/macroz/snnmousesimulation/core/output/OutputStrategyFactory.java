@@ -1,21 +1,34 @@
 package com.macroz.snnmousesimulation.core.output;
 
 import com.macroz.snnmousesimulation.core.output.concrete.PopulationDriveStrategy;
+import com.macroz.snnmousesimulation.exception.AgentConfigurationException;
+import com.macroz.snnmousesimulation.exception.AgentConfigurationException.StrategyType;
 
+import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Function;
 
 public class OutputStrategyFactory {
 
-    public static OutputStrategy create(String outputType, Map<String, Object> params) {
-        return switch (outputType.toUpperCase()) {
-            case "POPULATION_DRIVE" -> createPopulationDrive(params);
-            default -> throw new IllegalArgumentException("Unknown output type: " + outputType);
-        };
+    private static final Map<String, Function<Map<String, Object>, OutputStrategy>> REGISTRY = new HashMap<>();
+
+    static {
+        register("POPULATION_DRIVE", PopulationDriveStrategy::create);
     }
 
-    private static OutputStrategy createPopulationDrive(Map<String, Object> params) {
-        double speed = ((Number) params.getOrDefault("speed_per_spike", 0.5)).doubleValue();
-        double turn = ((Number) params.getOrDefault("turn_factor", 0.03)).doubleValue();
-        return new PopulationDriveStrategy(speed, turn);
+    public static void register(String type, Function<Map<String, Object>, OutputStrategy> factory) {
+        REGISTRY.put(type.toUpperCase(), factory);
+    }
+
+    public static OutputStrategy create(String outputType, Map<String, Object> params) {
+        var factory = REGISTRY.get(outputType.toUpperCase());
+        if (factory == null) {
+            throw new IllegalArgumentException("Unknown output type: " + outputType + ". Available: " + REGISTRY.keySet());
+        }
+        try {
+            return factory.apply(params);
+        } catch (Exception e) {
+            throw new AgentConfigurationException(StrategyType.OUTPUT, outputType, params, e);
+        }
     }
 }

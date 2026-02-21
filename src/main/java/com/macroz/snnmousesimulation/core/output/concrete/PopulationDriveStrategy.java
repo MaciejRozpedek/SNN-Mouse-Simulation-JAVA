@@ -3,14 +3,22 @@ package com.macroz.snnmousesimulation.core.output.concrete;
 import com.macroz.snnmousesimulation.core.output.OutputStrategy;
 import com.macroz.snnmousesimulation.world.Agent;
 
+import java.util.Map;
+
 public class PopulationDriveStrategy implements OutputStrategy {
 
     private final double speedPerSpike;
     private final double turnFactor;
 
-    public PopulationDriveStrategy(double speedPerSpike, double turnFactor) {
+    private PopulationDriveStrategy(double speedPerSpike, double turnFactor) {
         this.speedPerSpike = speedPerSpike;
         this.turnFactor = turnFactor;
+    }
+
+    public static PopulationDriveStrategy create(Map<String, Object> params) {
+        double speed = ((Number) params.getOrDefault("speed_per_spike", 0.5)).doubleValue();
+        double turn = ((Number) params.getOrDefault("turn_factor", 0.03)).doubleValue();
+        return new PopulationDriveStrategy(speed, turn);
     }
 
     @Override

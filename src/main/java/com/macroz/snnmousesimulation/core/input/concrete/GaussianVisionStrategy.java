@@ -5,6 +5,8 @@ import com.macroz.snnmousesimulation.world.Agent;
 import com.macroz.snnmousesimulation.world.Food;
 import com.macroz.snnmousesimulation.world.World;
 
+import java.util.Map;
+
 public class GaussianVisionStrategy implements InputStrategy {
 
     private final double OVERLAP_FACTOR;
@@ -15,7 +17,7 @@ public class GaussianVisionStrategy implements InputStrategy {
     private final double maxRangeSq;
     private final double halfFov;
 
-    public GaussianVisionStrategy(double fovDegrees, double range, double overlap_factor, double maxCurrent) {
+    private GaussianVisionStrategy(double fovDegrees, double range, double overlap_factor, double maxCurrent) {
         if (fovDegrees <= 0 || range <= 0) {
             throw new IllegalArgumentException("FOV and range must be positive.");
         }
@@ -30,13 +32,21 @@ public class GaussianVisionStrategy implements InputStrategy {
         this.MAX_CURRENT = maxCurrent;
     }
 
+    public static GaussianVisionStrategy create(Map<String, Object> params) {
+        return new GaussianVisionStrategy(
+                ((Number) params.getOrDefault("fov", 120)).doubleValue(),
+                ((Number) params.getOrDefault("range", 200)).doubleValue(),
+                ((Number) params.getOrDefault("overlap_factor", 1.5)).doubleValue(),
+                ((Number) params.getOrDefault("max_current", 10)).doubleValue()
+        );
+    }
+
     @Override
     public double[] calculateCurrents(Agent agent, World worldSnapshot, double deltaTime, int targetNeuronCount) {
         if (targetNeuronCount <= 0) return new double[0];
 
         double[] currents = new double[targetNeuronCount];
 
-        // Sigma calculation ensures smooth transition between neurons
         double sigma = (fovRadians / targetNeuronCount) * OVERLAP_FACTOR;
         double sigmaSq2 = 2 * sigma * sigma;
 
@@ -54,8 +64,6 @@ public class GaussianVisionStrategy implements InputStrategy {
 
             double distance = Math.sqrt(distSq);
 
-            // Quadratic falloff: Signal increases sharply as distance decreases.
-            // Formula: (1 - distance/maxRange)^2
             double proximity = 1.0 - (distance / maxRange);
             double signalStrength = MAX_CURRENT * (proximity * proximity);
 
@@ -63,7 +71,6 @@ public class GaussianVisionStrategy implements InputStrategy {
                 double preferredAngle = calculatePreferredAngle(i, targetNeuronCount);
                 double angleDifference = relativeAngle - preferredAngle;
 
-                // Gaussian spatial distribution
                 double activation = Math.exp(-(angleDifference * angleDifference) / sigmaSq2);
 
                 currents[i] += signalStrength * activation;
