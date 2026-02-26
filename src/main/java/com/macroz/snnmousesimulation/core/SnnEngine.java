@@ -29,6 +29,7 @@ public class SnnEngine {
     private final double[] v;
     private final double[] u;
     private final double[] I;
+    private final double[] spikeI;
 
     private final int[][] synapticTargets;
     private final double[][] synapticWeights;
@@ -48,6 +49,7 @@ public class SnnEngine {
         this.v = Arrays.copyOf(data.initialV(), totalNeuronCount);
         this.u = Arrays.copyOf(data.initialU(), totalNeuronCount);
         this.I = new double[totalNeuronCount];
+        this.spikeI = new double[totalNeuronCount];
 
         this.synapticTargets = data.synapticTargets();
         this.synapticWeights = data.synapticWeights();
@@ -100,7 +102,7 @@ public class SnnEngine {
             int typeId = neuronToTypeId[i];
 			p = neuronParamTypes.get(typeId);
             u[i] += dt * (p.a() * (p.b() * v[i] - u[i]));
-            v[i] += dt * (0.04 * v[i] * v[i] + 5 * v[i] + 140 - u[i] + I[i]);
+            v[i] += dt * (0.04 * v[i] * v[i] + 5 * v[i] + 140 - u[i] + I[i]) + spikeI[i];
         }
 
         // 2. Handle Spikes and Reset
@@ -121,7 +123,7 @@ public class SnnEngine {
                 int[] targets = synapticTargets[i];
                 double[] weights = synapticWeights[i];
                 for (int k = 0; k < targets.length; k++) {
-                    I[targets[k]] += weights[k];
+                    spikeI[targets[k]] += weights[k];
                 }
             }
         }
