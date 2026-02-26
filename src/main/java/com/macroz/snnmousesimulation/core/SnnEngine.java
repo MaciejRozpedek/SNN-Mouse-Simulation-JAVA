@@ -18,7 +18,9 @@ public class SnnEngine {
     // dopamine
     private static final double TAU_C = 1000.0;
     private static final double TAU_D = 20.0;
+    private static final double TAU_BASE_D = 200.0;
     private double dopamineLevel = 0.0;
+    private double dopamineBaseLevel = 0.0;
     private final double[][] eligibilityTraces;
 
     @Getter
@@ -155,17 +157,17 @@ public class SnnEngine {
 
     private void updateWeightsAndTraces(double dt) {
         double decayTrace = Math.exp(-dt / TAU_C);
-        double decayDopamine = Math.exp(-dt / TAU_D);
 
+        double dopamineSignal = dopamineLevel - dopamineBaseLevel;
 
-        boolean isDopamineActive = Math.abs(dopamineLevel) > 1e-6;
+        boolean isDopamineActive = Math.abs(dopamineSignal) > 1e-6;
 
         for (int i = 0; i < totalNeuronCount; i++) {
             double[] traces = eligibilityTraces[i];
             if (isDopamineActive) {
                 double[] weights = synapticWeights[i];
                 for (int k = 0; k < weights.length; k++) {
-                    double weightChange = traces[k] * dopamineLevel * dt;
+                    double weightChange = traces[k] * dopamineSignal * dt;
 
                     if (weightChange != 0) {
                         weights[k] += weightChange;
@@ -181,6 +183,10 @@ public class SnnEngine {
             }
         }
 
+        double alphaBase = Math.exp(-dt / TAU_BASE_D);
+        dopamineBaseLevel += (dopamineLevel - dopamineBaseLevel) * alphaBase;
+
+        double decayDopamine = Math.exp(-dt / TAU_D);
         dopamineLevel *= decayDopamine;
     }
 
