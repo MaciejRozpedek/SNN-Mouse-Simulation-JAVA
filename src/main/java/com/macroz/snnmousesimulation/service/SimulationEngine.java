@@ -80,7 +80,7 @@ public class SimulationEngine {
                         .name("state")
                         .data(state));
             } catch (IOException e) {
-                // Client disconnected, remove emitter
+                emitter.complete();
                 emitters.remove(emitter);
             }
         }
