@@ -1,6 +1,7 @@
 package com.macroz.snnmousesimulation.service;
 
 import com.macroz.snnmousesimulation.api.SimulationState;
+import com.macroz.snnmousesimulation.loader.SnnConfigProvider;
 import com.macroz.snnmousesimulation.world.World;
 import jakarta.annotation.PreDestroy;
 import org.springframework.stereotype.Service;
@@ -12,17 +13,19 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 @Service
 public class SimulationEngine {
+    private final SnnConfigProvider snnConfigProvider;
     private static final long TICK_RATE_MS = 16; 
 
     private volatile double speedMultiplier = 1.0;
     private volatile boolean running = false;
     private Thread simulationThread;
 
-    private final World world;
+    private World world;
     private final List<SseEmitter> emitters = new CopyOnWriteArrayList<>();
 
-    public SimulationEngine() {
-        this.world = new World(1000, 800, 100);
+    public SimulationEngine(SnnConfigProvider snnConfigProvider) {
+        this.snnConfigProvider = snnConfigProvider;
+        this.world = new World(1000, 800, 100, snnConfigProvider.loadConfig());
     }
 
     public void setSpeedMultiplier(double multiplier) {
@@ -36,6 +39,11 @@ public class SimulationEngine {
         simulationThread = new Thread(this::runLoop, "Simulation-Loop");
         simulationThread.setDaemon(true);
         simulationThread.start();
+    }
+
+    public void reloadSimulation() {
+        stopSimulation();
+        this.world = new World(1000, 800, 100, snnConfigProvider.loadConfig());
     }
 
     private void runLoop() {

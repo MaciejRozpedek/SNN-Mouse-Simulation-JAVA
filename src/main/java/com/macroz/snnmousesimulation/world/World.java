@@ -1,9 +1,7 @@
 package com.macroz.snnmousesimulation.world;
 
 
-import com.macroz.snnmousesimulation.SnnMouseSimulationApplication;
 import com.macroz.snnmousesimulation.core.SnnNetworkData;
-import com.macroz.snnmousesimulation.loader.NetworkTopologyLoader;
 import lombok.Getter;
 
 import java.util.ArrayList;
@@ -11,11 +9,9 @@ import java.util.List;
 import java.util.Random;
 
 public class World {
-    // Boundaries
     private final double width;
     private final double height;
 
-    // Entities
     @Getter
     private final Agent agent;
     @Getter
@@ -23,17 +19,13 @@ public class World {
 
     private final Random random = new Random();
 
-    // PARAMETERS
     private static final double EAT_RADIUS = 30.0;
 
-    public World(double width, double height, int numberOfFood) {
+    public World(double width, double height, int numberOfFood, SnnNetworkData snnNetworkData) {
         this.width = width;
         this.height = height;
         this.food = new ArrayList<>();
         initializeFood(numberOfFood);
-        SnnNetworkData snnNetworkData = new NetworkTopologyLoader().load(
-                    SnnMouseSimulationApplication.class.getResourceAsStream("/config/SNNConfig.yaml")
-        );
         this.agent = new Agent(width / 2, height / 2, snnNetworkData);
     }
 

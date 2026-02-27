@@ -21,12 +21,22 @@
 const canvas = document.getElementById('simCanvas');
 const ctx = canvas.getContext('2d');
 const toggleBtn = document.getElementById('toggleBtn');
+const reloadBtn = document.getElementById('reloadBtn');
 const elMouseX = document.getElementById('mouseX');
 const elMouseY = document.getElementById('mouseY');
 const elFoodCount = document.getElementById('foodCount');
 
 const speedRange = document.getElementById('speedRange');
 const speedValue = document.getElementById('speedValue');
+
+reloadBtn.addEventListener('click', () => {
+    stopSimulation()
+    fetch('/api/reload', { method: 'POST' })
+        .then(() => {
+            console.log("Simulation reloaded");
+        })
+        .catch(err => console.error("Failed to reload:", err));
+});
 
 speedRange.addEventListener('input', (e) => {
     speedValue.innerText = e.target.value;
@@ -76,6 +86,8 @@ function startSimulation() {
 }
 
 function stopSimulation() {
+    if (!isRunning) return;
+
     fetch('/api/stop', { method: 'POST'}).then(() => {
         isRunning = false;
         toggleBtn.textContent = "Start Simulation";

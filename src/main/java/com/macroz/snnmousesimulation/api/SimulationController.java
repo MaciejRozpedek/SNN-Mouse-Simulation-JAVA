@@ -28,6 +28,11 @@ public class SimulationController {
         simulationEngine.stopSimulation();
     }
 
+    @PostMapping("/reload")
+    public void reloadSimulation() {
+        simulationEngine.reloadSimulation();
+    }
+
     @PostMapping("/speed")
     public void setSpeed(@org.springframework.web.bind.annotation.RequestParam double multiplier) {
         simulationEngine.setSpeedMultiplier(multiplier);
