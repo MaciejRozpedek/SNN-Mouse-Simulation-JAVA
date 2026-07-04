@@ -47,14 +47,14 @@ public class SimulationEngine {
     }
 
     private void runLoop() {
-        while (running) {
-            long startTime = System.currentTimeMillis();
+        long expectedTime = System.currentTimeMillis();
 
+        while (running) {
             tick(TICK_RATE_MS);
 
             long targetInterval = (long) (TICK_RATE_MS / speedMultiplier);
-            long processTime = System.currentTimeMillis() - startTime;
-            long sleepTime = targetInterval - processTime;
+            expectedTime += targetInterval;
+            long sleepTime = expectedTime - System.currentTimeMillis();
 
             if (sleepTime > 0) {
                 try {
@@ -135,6 +135,6 @@ public class SimulationEngine {
                 .map(f -> new SimulationState.FoodState(f.x(), f.y()))
                 .toList();
 
-        return new SimulationState(agentState, foodStates, System.currentTimeMillis());
+        return new SimulationState(world.getSimulationTimeMs(), agentState, foodStates);
     }
 }

@@ -15,7 +15,7 @@
  * @typedef {Object} SimulationState
  * @property {AgentState} agent
  * @property {FoodState[]} food
- * @property {number} timestamp
+ * @property {number} simulationTimeMs
  */
 
 const canvas = document.getElementById('simCanvas');
@@ -25,6 +25,7 @@ const reloadBtn = document.getElementById('reloadBtn');
 const elMouseX = document.getElementById('mouseX');
 const elMouseY = document.getElementById('mouseY');
 const elFoodCount = document.getElementById('foodCount');
+const elSimTime = document.getElementById('simTime');
 
 const speedRange = document.getElementById('speedRange');
 const speedValue = document.getElementById('speedValue');
@@ -253,6 +254,11 @@ function updateTelemetry(world) {
 
     if (world.food) {
         elFoodCount.innerText = String(world.food.length);
+    }
+
+    if (world.simulationTimeMs !== undefined) {
+        const seconds = world.simulationTimeMs / 1_000;
+        elSimTime.innerText = seconds.toFixed(2) + 's';
     }
 }
 

@@ -13,6 +13,8 @@ public class World {
     private final double height;
 
     @Getter
+    private double simulationTimeMs = 0;
+    @Getter
     private final Agent agent;
     @Getter
     private final List<Food> food;
@@ -30,6 +32,7 @@ public class World {
     }
 
     public void update(double deltaTime) {
+        simulationTimeMs += deltaTime;
         Food closestFood = null;
         double minDistanceSquared = Double.MAX_VALUE;
 
