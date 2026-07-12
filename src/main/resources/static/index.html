@@ -43,6 +43,42 @@
                 <span id="foodCount">0</span>
             </div>
         </div>
+
+        <div class="telemetry">
+            <h3>SNN DIAGNOSTICS</h3>
+            <div class="telemetry-item">
+                <label>DOPAMINE</label>
+                <span id="dopamineVal">0.0000</span>
+            </div>
+            <div class="telemetry-item">
+                <label>BASE DOP.</label>
+                <span id="dopamineBaseVal">0.0000</span>
+            </div>
+            <div class="telemetry-item">
+                <label>MEAN HZ</label>
+                <span id="meanHz">0.00 Hz</span>
+            </div>
+            <div class="telemetry-item">
+                <label>SPIKES</label>
+                <span id="spikesLastStep">0</span>
+            </div>
+            <div class="telemetry-item">
+                <label>AVG WEIGHT</label>
+                <span id="avgWeight">0.00</span>
+            </div>
+            <div class="telemetry-item">
+                <label>W MIN/MAX</label>
+                <span id="weightRange">0.00 / 0.00</span>
+            </div>
+        </div>
+
+        <div class="snn-visualizer-container">
+            <div class="visualizer-header">
+                <h3>SNN ACTIVITY MAP</h3>
+                <button id="toggleNetBtn" class="btn secondary small">Show Map</button>
+            </div>
+            <canvas id="snnCanvas" width="250" height="150"></canvas>
+        </div>
     </div>
 
     <footer class="sidebar-footer">

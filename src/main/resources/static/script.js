@@ -16,16 +16,39 @@
  * @property {AgentState} agent
  * @property {FoodState[]} food
  * @property {number} simulationTimeMs
+ * @property {SnnDiagnosticState} snnDiagnostics
+ */
+
+/**
+ * @typedef {Object} SnnDiagnosticState
+ * @property {number} dopamineLevel
+ * @property {number} dopamineBaseLevel
+ * @property {number} meanFiringRateHz
+ * @property {number} totalSpikesInLastStep
+ * @property {number[]} firedNeuronIndices
+ * @property {number} averageWeight
+ * @property {number} minWeight
+ * @property {number} maxWeight
+ * @property {number[]|null} neuronPotentials
  */
 
 const canvas = document.getElementById('simCanvas');
 const ctx = canvas.getContext('2d');
+const snnCanvas = document.getElementById('snnCanvas');
+const snnCtx = snnCanvas.getContext('2d');
 const toggleBtn = document.getElementById('toggleBtn');
 const reloadBtn = document.getElementById('reloadBtn');
+const toggleNetBtn = document.getElementById('toggleNetBtn');
 const elMouseX = document.getElementById('mouseX');
 const elMouseY = document.getElementById('mouseY');
 const elFoodCount = document.getElementById('foodCount');
 const elSimTime = document.getElementById('simTime');
+const elDopamine = document.getElementById('dopamineVal');
+const elDopamineBase = document.getElementById('dopamineBaseVal');
+const elMeanHz = document.getElementById('meanHz');
+const elSpikesLastStep = document.getElementById('spikesLastStep');
+const elAvgWeight = document.getElementById('avgWeight');
+const elWeightRange = document.getElementById('weightRange');
 
 const speedRange = document.getElementById('speedRange');
 const speedValue = document.getElementById('speedValue');
@@ -51,6 +74,13 @@ let eventSource = null;
 let animationFrameId = null;
 let isRunning = false;
 let latestWorldState = null;
+let showNetworkMap = false;
+
+toggleNetBtn.addEventListener('click', () => {
+    showNetworkMap = !showNetworkMap;
+    snnCanvas.style.display = showNetworkMap ? 'block' : 'none';
+    toggleNetBtn.textContent = showNetworkMap ? 'Hide Map' : 'Show Map';
+});
 
 function toggleSimulation() {
     if (isRunning) {
@@ -112,6 +142,7 @@ function renderLoop() {
     if (latestWorldState) {
         render(latestWorldState);
         updateTelemetry(latestWorldState);
+        updateSnnTelemetry(latestWorldState);
     }
 
     animationFrameId = requestAnimationFrame(renderLoop);
@@ -260,6 +291,67 @@ function updateTelemetry(world) {
         const seconds = world.simulationTimeMs / 1_000;
         elSimTime.innerText = seconds.toFixed(2) + 's';
     }
+}
+
+/**
+ * @param {SimulationState} world
+ */
+function updateSnnTelemetry(world) {
+    if (!world.snnDiagnostics) return;
+
+    const diag = world.snnDiagnostics;
+    elDopamine.innerText = diag.dopamineLevel.toFixed(4);
+    elDopamineBase.innerText = diag.dopamineBaseLevel.toFixed(4);
+    elMeanHz.innerText = diag.meanFiringRateHz.toFixed(2) + ' Hz';
+    elSpikesLastStep.innerText = String(diag.totalSpikesInLastStep);
+    elAvgWeight.innerText = diag.averageWeight.toFixed(2);
+    elWeightRange.innerText = `${diag.minWeight.toFixed(2)} / ${diag.maxWeight.toFixed(2)}`;
+
+    if (showNetworkMap && diag.neuronPotentials) {
+        drawNetworkActivity(diag.neuronPotentials, diag.firedNeuronIndices);
+    }
+}
+
+/**
+ * @param {number[]} potentials
+ * @param {number[]} firedIndices
+ */
+function drawNetworkActivity(potentials, firedIndices) {
+    snnCtx.clearRect(0, 0, snnCanvas.width, snnCanvas.height);
+
+    const count = potentials.length;
+    if (count === 0) return;
+
+    const cols = Math.ceil(Math.sqrt(count));
+    const rows = Math.ceil(count / cols);
+    const cellWidth = snnCanvas.width / cols;
+    const cellHeight = snnCanvas.height / rows;
+    const radius = Math.max(1, Math.min(cellWidth, cellHeight) * 0.38);
+    const firedSet = new Set(firedIndices || []);
+
+    for (let i = 0; i < count; i++) {
+        const col = i % cols;
+        const row = Math.floor(i / cols);
+        const x = col * cellWidth + cellWidth / 2;
+        const y = row * cellHeight + cellHeight / 2;
+        const normalizedV = Math.min(Math.max((potentials[i] + 70) / 100, 0), 1);
+
+        snnCtx.beginPath();
+        snnCtx.arc(x, y, radius, 0, Math.PI * 2);
+
+        if (firedSet.has(i)) {
+            snnCtx.fillStyle = '#ffffff';
+            snnCtx.shadowBlur = 8;
+            snnCtx.shadowColor = '#00ff41';
+        } else {
+            snnCtx.fillStyle = `rgba(0, 255, 65, ${Math.max(0.12, normalizedV)})`;
+            snnCtx.shadowBlur = 0;
+        }
+
+        snnCtx.fill();
+    }
+
+    snnCtx.shadowBlur = 0;
 }
 
 toggleBtn.addEventListener('click', toggleSimulation);

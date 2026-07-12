@@ -1,6 +1,8 @@
 package com.macroz.snnmousesimulation.world;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.macroz.snnmousesimulation.api.SnnDiagnosticState;
+import com.macroz.snnmousesimulation.core.SnnDiagnosticTracker;
 import com.macroz.snnmousesimulation.core.SnnEngine;
 import com.macroz.snnmousesimulation.core.SnnNetworkData;
 import com.macroz.snnmousesimulation.core.input.InputConfig;
@@ -28,6 +30,8 @@ public class Agent {
     @JsonIgnore
     private final SnnEngine engine;
     @JsonIgnore
+    private final SnnDiagnosticTracker diagnosticTracker;
+    @JsonIgnore
     private final InputSystem inputSystem;
     @JsonIgnore
     private final OutputSystem outputSystem;
@@ -38,6 +42,7 @@ public class Agent {
         this.angle = 0;
         // SNN initialization
         this.engine = new SnnEngine(data);
+        this.diagnosticTracker = new SnnDiagnosticTracker(engine);
         this.inputSystem = new InputSystem();
         this.outputSystem = new OutputSystem();
 
@@ -65,9 +70,14 @@ public class Agent {
 
         // 2. BRAIN PROCESS - Run one time step
         List<Integer> firedIndices = engine.step(deltaTime);
+        diagnosticTracker.registerStep(deltaTime, firedIndices);
 
         // 3. RESPONSE - Interpret outputs and move
         outputSystem.processOutputs(this, firedIndices, deltaTime);
+    }
+
+    public SnnDiagnosticState getSnnDiagnostics() {
+        return diagnosticTracker.snapshot();
     }
 
     public void applyReward(){

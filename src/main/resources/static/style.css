@@ -37,6 +37,7 @@ body {
     flex-shrink: 0;
     z-index: 20;
     box-shadow: 4px 0 24px rgba(0,0,0,0.5);
+    overflow-y: auto;
 }
 
 .brand h1 {
@@ -94,6 +95,22 @@ body {
 .btn.stop:hover {
     background-color: rgba(255, 0, 85, 0.1);
     box-shadow: 0 0 15px rgba(255, 0, 85, 0.3);
+}
+
+.btn.secondary {
+    border-color: var(--neon-green);
+    color: var(--neon-green);
+}
+
+.btn.secondary:hover {
+    background-color: rgba(0, 255, 65, 0.1);
+    box-shadow: 0 0 15px rgba(0, 255, 65, 0.25);
+}
+
+.btn.small {
+    width: auto;
+    padding: 6px 10px;
+    font-size: 0.7rem;
 }
 
 .sidebar-footer {
@@ -159,4 +176,35 @@ canvas {
     background-color: transparent; 
     border: 1px solid #374151;
     box-shadow: 0 0 50px rgba(0,0,0,0.5);
+}
+
+.snn-visualizer-container {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(0, 255, 65, 0.65);
+    border-radius: 4px;
+    padding: 1rem;
+    font-family: 'Roboto Mono', monospace;
+}
+
+.visualizer-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+.visualizer-header h3 {
+    color: var(--neon-green);
+    font-size: 0.8rem;
+    letter-spacing: 0.1em;
+}
+
+#snnCanvas {
+    display: none;
+    width: 100%;
+    height: auto;
+    margin-top: 0.75rem;
+    background: #0b0f19;
+    border: 1px solid var(--neon-cyan);
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.16);
 }

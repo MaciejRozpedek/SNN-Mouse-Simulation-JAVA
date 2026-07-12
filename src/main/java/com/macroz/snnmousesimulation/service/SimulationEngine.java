@@ -14,7 +14,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 @Service
 public class SimulationEngine {
     private final SnnConfigProvider snnConfigProvider;
-    private static final long TICK_RATE_MS = 16; 
+    private static final long TICK_RATE_MS = 1;
 
     private volatile double speedMultiplier = 1.0;
     private volatile boolean running = false;
@@ -135,6 +135,6 @@ public class SimulationEngine {
                 .map(f -> new SimulationState.FoodState(f.x(), f.y()))
                 .toList();
 
-        return new SimulationState(world.getSimulationTimeMs(), agentState, foodStates);
+        return new SimulationState(world.getSimulationTimeMs(), agentState, foodStates, agent.getSnnDiagnostics());
     }
 }
