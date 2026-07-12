@@ -13,13 +13,15 @@ public class SnnEngine {
     private static final double TAU_MINUS = 5.0;
     private static final double A_PLUS = 0.01;
     private static final double A_MINUS = 0.012;
-    private static final double MAX_WEIGHT = 10000.0;
+    private static final double MAX_WEIGHT = 50.0;
 
     // dopamine
     private static final double TAU_C = 1000.0;
     private static final double TAU_D = 20.0;
     private static final double TAU_BASE_D = 200.0;
+    @Getter
     private double dopamineLevel = 0.0;
+    @Getter
     private double dopamineBaseLevel = 0.0;
     private final double[][] eligibilityTraces;
 
@@ -34,6 +36,7 @@ public class SnnEngine {
     private final double[] spikeI;
 
     private final int[][] synapticTargets;
+    @Getter
     private final double[][] synapticWeights;
 
     private final int[][] synapticSources;
@@ -102,7 +105,7 @@ public class SnnEngine {
             // v' = 0.04v^2 + 5v + 140 - u + I
             // u' = a(bv - u)
             int typeId = neuronToTypeId[i];
-			p = neuronParamTypes.get(typeId);
+            p = neuronParamTypes.get(typeId);
             u[i] += dt * (p.a() * (p.b() * v[i] - u[i]));
             v[i] += dt * (0.04 * v[i] * v[i] + 5 * v[i] + 140 - u[i] + I[i]) + spikeI[i];
         }
@@ -110,6 +113,7 @@ public class SnnEngine {
         // 2. Handle Spikes and Reset
         List<Integer> firedIndices = new ArrayList<>();
         Arrays.fill(I, 0.0);
+        Arrays.fill(spikeI, 0.0);
 
         for (int i = 0; i < totalNeuronCount; i++) {
             // if v >= 30 mV
@@ -167,8 +171,13 @@ public class SnnEngine {
             if (isDopamineActive) {
                 double[] weights = synapticWeights[i];
                 for (int k = 0; k < weights.length; k++) {
-                    double weightChange = traces[k] * dopamineSignal * dt;
 
+                    if (weights[k] < 0) {
+                        traces[k] *= decayTrace;
+                        continue;
+                    }
+
+                    double weightChange = traces[k] * dopamineSignal * dt;
                     if (weightChange != 0) {
                         weights[k] += weightChange;
                         if (weights[k] > MAX_WEIGHT) weights[k] = MAX_WEIGHT;
@@ -183,7 +192,7 @@ public class SnnEngine {
             }
         }
 
-        double alphaBase = Math.exp(-dt / TAU_BASE_D);
+        double alphaBase = 1.0 - Math.exp(-dt / TAU_BASE_D);
         dopamineBaseLevel += (dopamineLevel - dopamineBaseLevel) * alphaBase;
 
         double decayDopamine = Math.exp(-dt / TAU_D);
