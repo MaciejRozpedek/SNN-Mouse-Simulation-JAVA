@@ -107,3 +107,33 @@ The first mathematical batch contains 12 complete templates: Hooke 3, Meitner 6
 and Poincare 3. A local Java validator loaded every YAML through
 `NetworkTopologyLoader`, instantiated its `Agent` and all configured input/output
 strategies, and counted the resulting topology. All 12 templates passed.
+
+## 2026-07-13 - Topographic policy screening
+
+Poincare 001/002/003 and the original baseline were first screened for 30 seconds
+on 10 paired seeds. All topographic variants improved mean evaluation rewards;
+003 was weaker than 001, while the hunger addition in 002 gave only a small gain
+over 001. Baseline, 001 and 002 then ran for 180 seconds on 16 paired seeds with a
+30-second burn-in.
+
+| configuration | rewards mean | reward trend | stable runs | path | paired median vs baseline |
+|---|---:|---:|---:|---:|---:|
+| baseline | 0.750 | -0.375 | 0.44 | 69.09 | 0 |
+| Poincare 001 | 22.688 | +2.938 | 1.00 | 1739.54 | +21 |
+| Poincare 002 | 22.875 | +0.750 | 1.00 | 1959.38 | +22 |
+
+Both topographic policies beat baseline on all 16 seeds. The difference between
+002 and 001 was small (mean +0.188, median +1), so hunger mainly increased travel
+rather than food efficiency. This establishes a much better policy but does not
+yet establish learning, because hard-wired routing alone may explain the result.
+
+## 2026-07-13 - Frozen-learning control
+
+`SnnEngine` now exposes a benchmark control that freezes STDP, eligibility traces
+and weights while preserving neuron dynamics and dopamine decay. The benchmark
+accepts `learningEnabled`, records it in results and the local runner can override
+it per candidate. Changing mode clears transient learning traces to prevent stale
+credit from leaking across a toggle. Main-agent review and the complete 31-test
+suite passed; an independent true/false HTTP smoke test confirmed exactly zero
+weight change in the disabled run. The next experiment compares Poincare 001/002
+with identical seeds under learning enabled and frozen.

@@ -54,9 +54,10 @@ public class SimulationController {
             @org.springframework.web.bind.annotation.RequestParam(defaultValue = "1") double stepMs,
             @org.springframework.web.bind.annotation.RequestParam(defaultValue = "1000") double burnInMs,
             @org.springframework.web.bind.annotation.RequestParam(defaultValue = "10") int repeats,
-            @org.springframework.web.bind.annotation.RequestParam(defaultValue = "1") long baseSeed
+            @org.springframework.web.bind.annotation.RequestParam(defaultValue = "1") long baseSeed,
+            @org.springframework.web.bind.annotation.RequestParam(defaultValue = "true") boolean learningEnabled
     ) {
-        return benchmarkService.run(durationMs, stepMs, burnInMs, repeats, baseSeed);
+        return benchmarkService.run(durationMs, stepMs, burnInMs, repeats, baseSeed, learningEnabled);
     }
 
     @ExceptionHandler(IllegalArgumentException.class)

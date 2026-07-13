@@ -30,6 +30,17 @@ public class SimulationBenchmarkService {
             int repeats,
             long baseSeed
     ) {
+        return run(durationMs, stepMs, burnInMs, repeats, baseSeed, true);
+    }
+
+    public synchronized BenchmarkResult run(
+            double durationMs,
+            double stepMs,
+            double burnInMs,
+            int repeats,
+            long baseSeed,
+            boolean learningEnabled
+    ) {
         validate(durationMs, stepMs, burnInMs, repeats, baseSeed);
 
         long estimatedStepsPerRun = estimateSteps(durationMs, stepMs);
@@ -41,7 +52,7 @@ public class SimulationBenchmarkService {
         List<BenchmarkResult.Run> runs = new ArrayList<>(repeats);
         for (int index = 0; index < repeats; index++) {
             long seed = Math.addExact(baseSeed, index);
-            runs.add(runOnce(index + 1, seed, durationMs, stepMs, burnInMs, estimatedStepsPerRun));
+            runs.add(runOnce(index + 1, seed, durationMs, stepMs, burnInMs, estimatedStepsPerRun, learningEnabled));
         }
         long benchmarkElapsedNs = System.nanoTime() - benchmarkStarted;
 
@@ -58,7 +69,7 @@ public class SimulationBenchmarkService {
         );
 
         return new BenchmarkResult(
-                new BenchmarkResult.Parameters(durationMs, stepMs, burnInMs, repeats, baseSeed),
+                new BenchmarkResult.Parameters(durationMs, stepMs, burnInMs, repeats, baseSeed, learningEnabled),
                 summary,
                 List.copyOf(runs)
         );
@@ -70,10 +81,12 @@ public class SimulationBenchmarkService {
             double durationMs,
             double stepMs,
             double burnInMs,
-            long maxSteps
+            long maxSteps,
+            boolean learningEnabled
     ) {
         var network = configProvider.loadConfig(seed);
         var world = new World(WORLD_WIDTH, WORLD_HEIGHT, FOOD_COUNT, network, mixSeed(seed));
+        world.getAgent().getEngine().setLearningEnabled(learningEnabled);
         double initialWeight = world.getAgent().getSnnDiagnostics().averageWeight();
         double pathLength = 0.0;
 

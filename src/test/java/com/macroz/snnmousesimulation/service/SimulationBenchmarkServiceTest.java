@@ -104,6 +104,15 @@ class SimulationBenchmarkServiceTest {
     }
 
     @Test
+    void recordsLearningSettingAndFreezesWeightsWhenDisabled() {
+        var result = new SimulationBenchmarkService(new DrivenMotorConfigProvider())
+                .run(10.0, 1.0, 2.0, 1, 100L, false);
+
+        assertEquals(false, result.parameters().learningEnabled());
+        assertEquals(0.0, result.runs().getFirst().averageWeightDelta(), 1e-12);
+    }
+
+    @Test
     void rejectsUnsafeOrNumericallyInvalidParameters() {
         assertAll(
                 () -> assertThrows(IllegalArgumentException.class, () -> service.run(0, 1, 0, 1, 1)),

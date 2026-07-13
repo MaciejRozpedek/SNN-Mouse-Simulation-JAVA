@@ -19,8 +19,12 @@ public record BenchmarkResult(
             double stepMs,
             double burnInMs,
             int repeats,
-            long baseSeed
+            long baseSeed,
+            boolean learningEnabled
     ) {
+        public Parameters(double durationMs, double stepMs, double burnInMs, int repeats, long baseSeed) {
+            this(durationMs, stepMs, burnInMs, repeats, baseSeed, true);
+        }
     }
 
     public record Summary(

@@ -8,6 +8,9 @@ import java.util.List;
 
 public class SnnEngine {
 
+    @Getter
+    private boolean learningEnabled = true;
+
     // STDP Constants
     private static final double TAU_PLUS = 5.0;
     private static final double TAU_MINUS = 5.0;
@@ -135,7 +138,7 @@ public class SnnEngine {
         }
 
         // 3. Apply STDP Rule if any neuron fired
-        if (!firedIndices.isEmpty()) {
+        if (learningEnabled && !firedIndices.isEmpty()) {
             applySTDP(firedIndices);
         }
 
@@ -150,6 +153,9 @@ public class SnnEngine {
     }
 
     private void updateSynapticTraces(double dt) {
+        if (!learningEnabled) {
+            return;
+        }
         double decayPre = Math.exp(-dt / TAU_PLUS);
         double decayPost = Math.exp(-dt / TAU_MINUS);
 
@@ -166,28 +172,29 @@ public class SnnEngine {
 
         boolean isDopamineActive = Math.abs(dopamineSignal) > 1e-6;
 
-        for (int i = 0; i < totalNeuronCount; i++) {
-            double[] traces = eligibilityTraces[i];
-            if (isDopamineActive) {
-                double[] weights = synapticWeights[i];
-                for (int k = 0; k < weights.length; k++) {
+        if (learningEnabled) {
+            for (int i = 0; i < totalNeuronCount; i++) {
+                double[] traces = eligibilityTraces[i];
+                if (isDopamineActive) {
+                    double[] weights = synapticWeights[i];
+                    for (int k = 0; k < weights.length; k++) {
+                        if (weights[k] < 0) {
+                            traces[k] *= decayTrace;
+                            continue;
+                        }
 
-                    if (weights[k] < 0) {
+                        double weightChange = traces[k] * dopamineSignal * dt;
+                        if (weightChange != 0) {
+                            weights[k] += weightChange;
+                            if (weights[k] > MAX_WEIGHT) weights[k] = MAX_WEIGHT;
+                            if (weights[k] < 0) weights[k] = 0;
+                        }
                         traces[k] *= decayTrace;
-                        continue;
                     }
-
-                    double weightChange = traces[k] * dopamineSignal * dt;
-                    if (weightChange != 0) {
-                        weights[k] += weightChange;
-                        if (weights[k] > MAX_WEIGHT) weights[k] = MAX_WEIGHT;
-                        if (weights[k] < 0) weights[k] = 0;
+                } else {
+                    for (int k = 0; k < traces.length; k++) {
+                        traces[k] *= decayTrace;
                     }
-                    traces[k] *= decayTrace;
-                }
-            } else {
-                for (int k = 0; k < traces.length; k++) {
-                    traces[k] *= decayTrace;
                 }
             }
         }
@@ -229,6 +236,17 @@ public class SnnEngine {
 
     public void injectDopamine(double amount) {
         this.dopamineLevel += amount;
+    }
+
+    public void setLearningEnabled(boolean learningEnabled) {
+        if (this.learningEnabled != learningEnabled) {
+            Arrays.fill(presynapticTrace, 0.0);
+            Arrays.fill(postsynapticTrace, 0.0);
+            for (double[] traces : eligibilityTraces) {
+                Arrays.fill(traces, 0.0);
+            }
+        }
+        this.learningEnabled = learningEnabled;
     }
 
     public void addInputCurrent(int[] neuronIndices, double[] currents) {
