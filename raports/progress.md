@@ -87,3 +87,23 @@ connect sensory channels to three named motor populations independently.
 A faster implementation worker created the strategies and focused tests. Main-
 agent review tightened the public classes, verified exact factory types, corrected
 the output schema documentation and documented binding-order semantics.
+
+## 2026-07-13 - Headless local experiment runner
+
+The local, Git-excluded runner now starts one JVM per candidate and calls
+`POST /api/benchmark` instead of consuming 1000 SSE states per second. A candidate
+can be built from the baseline plus declarative overrides or loaded as a complete
+YAML from a mathematician's template directory. Complete templates are validated
+and copied byte-for-byte so their hypothesis comments remain attached to results.
+
+Each candidate is evaluated on a shared seed range (10 repeats by default), and
+the report compares reward mean/deviation/trend, firing rate, stable-run ratio,
+weight change, path length and simulated-to-wall ratio against the baseline. Main-
+agent review added strict manifest paths, configurable endpoint timeout and an 80%
+per-run firing-stability gate. Python compilation, candidate generation, an HTTP
+smoke comparison and comment-preservation check all passed.
+
+The first mathematical batch contains 12 complete templates: Hooke 3, Meitner 6
+and Poincare 3. A local Java validator loaded every YAML through
+`NetworkTopologyLoader`, instantiated its `Agent` and all configured input/output
+strategies, and counted the resulting topology. All 12 templates passed.

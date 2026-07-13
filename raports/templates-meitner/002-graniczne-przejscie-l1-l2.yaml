@@ -1,0 +1,128 @@
+# HIPOTEZA: srednia waga 1.2 na pelnej projekcji Layer1->Layer2 lezy blizej
+# przejscia miedzy brakiem propagacji a korelowanymi burstami niz baseline 6.0
+# i moze dac najwyzszy zakres dynamiczny bez utraty ruchu.
+# MECHANIZM MATEMATYCZNY: przesuniecie ze spoczynku -70 mV ponad separatrix -50 mV
+# wymaga ok. 20 mV. Przy wadze 1.2 odpowiada to ok. 17 niemal synchronicznym
+# spike'om L1. Monte Carlo wejscia baseline dawalo mediane 19 kanalow z I>=3.8,
+# dlatego wariant celuje w granice propagacji zalezne od synchronii, a nie od
+# pojedynczego spike'u. Hamowanie FS->RS i DA-STDP pozostaja niezmienione.
+# ROZNICA WZGLEDEM BASELINE: mean/std L1->L2: 6/2 -> 1.2/0.4 (mnoznik 0.2).
+# OCZEKIWANY WYNIK: rzadkie fale L1->L2->L3, globalny firing 1-20 Hz, niezerowa
+# droga i mniejsza czulosc na seed niz w 001; brak stalej aktywacji calego L2.
+# METRYKI: finalFiringRateHz, pathLength, evaluationRewards, rewardTrend,
+# averageWeightDelta; docelowo m_L1->L2, rozklad A_t i opoznienia L1/L2/L3.
+# KRYTERIUM ODRZUCENIA: odrzucic, jesli ponad 20% runow ma firing <0.1 Hz lub
+# >50 Hz, jesli agent nie porusza sie w >=90% runow, albo jesli nie poprawia
+# mediany pathLength/firing wzgledem 001 bez wejscia w burstowa saturacje.
+
+neuron_types:
+  RS:
+    a: 0.02
+    b: 0.2
+    c: -65.0
+    d: 8.0
+    v0: -70.0
+    u0: -14.0
+  FS:
+    a: 0.1
+    b: 0.2
+    c: -65.0
+    d: 2.0
+    v0: -70.0
+    u0: -14.0
+
+groups:
+  - name: Cortex
+    subgroups:
+      - name: Layer1
+        neurons:
+          - type: RS
+            count: 80
+          - type: FS
+            count: 20
+      - name: Layer2
+        neurons:
+          - type: RS
+            count: 80
+          - type: FS
+            count: 20
+      - name: Layer3
+        neurons:
+          - type: RS
+            count: 80
+          - type: FS
+            count: 20
+
+inputs:
+  - name: VisionFront
+    sensor_type: GAUSSIAN_VISION
+    target_group: Cortex.Layer1
+    target_type: RS
+    params:
+      fov: 120
+      range: 500
+      overlap_factor: 1.5
+      max_current: 10.0
+
+outputs:
+  - name: MotorControl
+    output_type: POPULATION_DRIVE
+    source_group: Cortex.Layer3
+    source_type: RS
+    params:
+      speed_per_spike: 0.1
+      turn_factor: 0.1
+
+connections:
+  - from: Cortex.[0]
+    to: Cortex.[0]
+    from_type: RS
+    to_type: all
+    exclude_self: false
+    weight:
+      uniform:
+        min: 1.0
+        max: 2.0
+    rule:
+      type: probabilistic
+      probability: 0.1
+      allow_autapses: true
+
+  - from: Cortex.[0]
+    to: Cortex.[0]
+    from_type: FS
+    to_type: RS
+    exclude_self: false
+    weight:
+      fixed: -2.0
+    rule:
+      type: fixed_out_degree
+      count: 15
+      allow_autapses: false
+
+  - from: Cortex.Layer1
+    to: Cortex.Layer2
+    from_type: RS
+    to_type: all
+    exclude_self: false
+    weight:
+      normal:
+        mean: 1.2
+        std: 0.4
+    rule:
+      type: all_to_all
+      allow_autapses: false
+
+  - from: Cortex.Layer2
+    to: Cortex.Layer3
+    from_type: RS
+    to_type: all
+    exclude_self: false
+    weight:
+      normal:
+        mean: 3.0
+        std: 1.0
+    rule:
+      type: probabilistic
+      probability: 0.25
+      allow_autapses: false

@@ -1,0 +1,208 @@
+# HOOKE 003 — jawne akcje, antyzgodny most sensoryczny (kontrola znaku)
+# Hipoteza: odwrócenie wyłącznie dwóch dróg skrętu powinno pogorszyć zbliżanie do
+# celu. Jeśli 003 dorówna 002, wynik nie wynika z prawidłowego credit assignment
+# znaku kąta albo konwencja skrętu została zinterpretowana odwrotnie.
+# Mechanizm matematyczny:
+# - Populacje, E/I, prądy, firing, Hunger, zyski i łączna liczba synaps są
+#   identyczne z 002: oczekiwane 584 lokalne E, 200 lokalnych I i 640 mostu E.
+# - Jedyna zmiana: VisionLeft->TurnLeft i VisionRight->TurnRight. Dla kodu
+#   względnego kąta daje to obrót od celu zamiast ku niemu; centrum nadal prowadzi
+#   do Forward, więc agent może zdobywać przypadkowe nagrody i generować dopaminę.
+# - Pary pre-post nadal mieszczą się w tau_STDP=5 ms i tworzą eligibility przez
+#   1000 ms. Test sprawdza, czy globalna nagroda selektywnie osłabi zły routing,
+#   czy tylko wzmacnia często aktywne ścieżki niezależnie od znaku działania.
+# - Dwufazowe D-B może utrudniać naprawę: brak nagrody nie daje bezpośredniej kary,
+#   a ujemny ogon występuje dopiero po przypadkowej nagrodzie.
+# Różnica względem baseline: jak 002, ale lateralne połączenia są celowo
+# antykongruentne. Względem 002 zmieniają się tylko dwa kierunki routingu.
+# Oczekiwany wynik: poprawny ruch naprzód przy celu centralnym, błędny znak skrętu,
+# mniej nagród i gorsze rewards/pathLength. Silna poprawa rewardTrend byłaby
+# interesującym sygnałem naprawy przez DA-STDP, wymagającym późniejszej frozen eval.
+# Metryki: sparowane 002-003 po seedzie, steering gain dla ±kątów, b0, mirror
+# error, rewardTrend i zmiany wag osobno dla obu złych mostów oraz centrum.
+# Kryterium odrzucenia jako kontroli: jeśli test bodźca nie daje znaku przeciwnego
+# do 002 przed treningiem, YAML-e nie izolują routingu; jeśli 003 ma trwale lepsze
+# nagrody bez odwrócenia steering gain, metryka nagród jest zdominowana przez tło.
+# Kryteria aktywności i saturacji pozostają takie jak w 001.
+# Zalecany screening: durationMs=180000, burnInMs=30000, stepMs=1,
+# repeats=16, baseSeed=104729. Nie wybierać 003 jako kandydata produkcyjnego bez
+# udokumentowanej, utrwalonej naprawy polityki po zamrożeniu wag.
+
+neuron_types:
+  RS:
+    a: 0.02
+    b: 0.2
+    c: -65.0
+    d: 8.0
+    v0: -70.0
+    u0: -14.0
+  FS:
+    a: 0.1
+    b: 0.2
+    c: -65.0
+    d: 2.0
+    v0: -70.0
+    u0: -14.0
+
+groups:
+  - name: Cortex
+    subgroups:
+      - name: Sensory
+        subgroups:
+          - name: VisionLeft
+            neurons:
+              - type: RS
+                count: 20
+              - type: FS
+                count: 5
+          - name: VisionCenter
+            neurons:
+              - type: RS
+                count: 40
+              - type: FS
+                count: 10
+          - name: VisionRight
+            neurons:
+              - type: RS
+                count: 20
+              - type: FS
+                count: 5
+      - name: Motor
+        subgroups:
+          - name: TurnLeft
+            neurons:
+              - type: RS
+                count: 20
+              - type: FS
+                count: 5
+          - name: Forward
+            neurons:
+              - type: RS
+                count: 40
+              - type: FS
+                count: 10
+          - name: TurnRight
+            neurons:
+              - type: RS
+                count: 20
+              - type: FS
+                count: 5
+
+inputs:
+  - name: OrderedVision
+    sensor_type: GAUSSIAN_VISION
+    target_group: Cortex.Sensory
+    target_type: RS
+    params:
+      fov: 120
+      range: 500
+      overlap_factor: 1.5
+      max_current: 8.0
+
+  - name: SensoryBackground
+    sensor_type: TONIC_NOISE
+    target_group: Cortex.Sensory
+    target_type: RS
+    params:
+      base_current: 1.5
+      noise_std: 0.5
+      seed: 61001
+
+  - name: MotorExploration
+    sensor_type: TONIC_NOISE
+    target_group: Cortex.Motor
+    target_type: RS
+    params:
+      base_current: 2.0
+      noise_std: 0.7
+      seed: 62001
+
+  - name: HungerForward
+    sensor_type: HUNGER_DRIVE
+    target_group: Cortex.Motor.Forward
+    target_type: RS
+    params:
+      activation_delay_ms: 5000
+      ramp_duration_ms: 20000
+      max_current: 3.0
+
+outputs:
+  - name: ExplicitTurnLeft
+    output_type: TURN_LEFT
+    source_group: Cortex.Motor.TurnLeft
+    source_type: RS
+    params:
+      radians_per_spike: 0.02
+
+  - name: ExplicitTurnRight
+    output_type: TURN_RIGHT
+    source_group: Cortex.Motor.TurnRight
+    source_type: RS
+    params:
+      radians_per_spike: 0.02
+
+  - name: ExplicitForward
+    output_type: FORWARD_DRIVE
+    source_group: Cortex.Motor.Forward
+    source_type: RS
+    params:
+      speed_per_spike: 0.05
+
+connections:
+  - from: Cortex.[0].[1]
+    to: Cortex.[0].[1]
+    from_type: RS
+    to_type: all
+    weight:
+      uniform:
+        min: 0.5
+        max: 1.0
+    rule:
+      type: probabilistic
+      probability: 0.1
+      # Loader ma odwróconą semantykę: true faktycznie blokuje autapsy.
+      allow_autapses: true
+
+  - from: Cortex.[0].[1]
+    to: Cortex.[0].[1]
+    from_type: FS
+    to_type: RS
+    weight:
+      fixed: -2.5
+    rule:
+      type: fixed_out_degree
+      count: 5
+      allow_autapses: false
+
+  - from: Cortex.Sensory.VisionLeft
+    to: Cortex.Motor.TurnLeft
+    from_type: RS
+    to_type: RS
+    weight:
+      fixed: 2.0
+    rule:
+      type: fixed_in_degree
+      count: 8
+      allow_autapses: false
+
+  - from: Cortex.Sensory.VisionCenter
+    to: Cortex.Motor.Forward
+    from_type: RS
+    to_type: RS
+    weight:
+      fixed: 2.0
+    rule:
+      type: fixed_in_degree
+      count: 8
+      allow_autapses: false
+
+  - from: Cortex.Sensory.VisionRight
+    to: Cortex.Motor.TurnRight
+    from_type: RS
+    to_type: RS
+    weight:
+      fixed: 2.0
+    rule:
+      type: fixed_in_degree
+      count: 8
+      allow_autapses: false

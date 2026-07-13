@@ -7,8 +7,8 @@
 - [x] **Background and hunger inputs** - add tonic noise and delayed, meal-reset hunger drive.
 - [x] **Benchmark design** - profile the current loop and add a dedicated headless endpoint.
 - [ ] **Additional strategies** - evaluate concrete sensory and motor strategies useful for learning.
-- [ ] **Directional motor outputs** - consider separate forward, left and right output populations.
-- [ ] **Experiment harness** - refine repeatable configuration generation, execution and result analysis.
+- [x] **Directional motor outputs** - add separate forward, left and right output populations.
+- [x] **Experiment harness** - use the headless endpoint for repeatable candidate generation, execution and result analysis.
 - [ ] **Configuration search** - test topology, weights, inputs and outputs in staged sweeps.
 - [ ] **Repeated validation** - run promising configurations at least ten times.
 - [ ] **Learning evidence** - demonstrate repeatable improvement in food-seeking behaviour.
