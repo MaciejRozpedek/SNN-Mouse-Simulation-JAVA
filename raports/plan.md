@@ -1,8 +1,10 @@
 # SNN learning work plan
 
+- [ ] **Worker-review development loop** - use a faster implementation worker, then main-agent review and tests before each commit.
+- [ ] **Continuous mathematical analysis** - keep Meitner, Hooke and Poincare analysing in parallel on ultra reasoning and writing separate `network-analysis-{name}.md` reports.
 - [x] **Project and configuration review** - inspect the PDF, YAML schema and extension points.
 - [x] **Background and hunger inputs** - add tonic noise and delayed, meal-reset hunger drive.
-- [ ] **Benchmark design** - profile the current loop and decide whether a dedicated endpoint is justified.
+- [x] **Benchmark design** - profile the current loop and add a dedicated headless endpoint.
 - [ ] **Additional strategies** - evaluate concrete sensory and motor strategies useful for learning.
 - [ ] **Directional motor outputs** - consider separate forward, left and right output populations.
 - [ ] **Experiment harness** - refine repeatable configuration generation, execution and result analysis.

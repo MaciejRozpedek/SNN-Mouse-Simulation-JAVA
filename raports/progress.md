@@ -1,5 +1,16 @@
 # SNN learning progress
 
+## Working protocol
+
+Important code changes use a faster worker with a bounded write set. The main agent
+waits for that implementation, then performs review, integration and tests before
+committing. During configuration testing, three long-running mathematical agents
+(Meitner, Hooke and Poincare) analyse dynamics, DA-STDP and experimental topology
+on ultra reasoning. They communicate directly and through their separate
+`raports/network-analysis-{name}.md` files. Their work does not block implementation
+or routine tests; it is consumed when choosing the next experiments. Subagents do
+not commit or push.
+
 ## 2026-07-13 - Background activity and hunger drive
 
 The project documentation and `SNN_CONFIGURATION.md` were reviewed before changing
@@ -36,3 +47,23 @@ creation. They preserve random defaults for interactive simulation while allowin
 benchmark runs to compare configurations on matching topology, weight and food
 seeds. `World` also records the exact reward count and simulation timestamps, so
 benchmarks no longer need to infer food events from dopamine samples.
+
+## 2026-07-13 - Headless benchmark endpoint
+
+`POST /api/benchmark` runs independent worlds in a tight loop with no sleep, SSE,
+per-tick DTO construction or JSON serialization. It accepts `durationMs`, `stepMs`,
+`burnInMs`, `repeats` and `baseSeed`. Every repeat uses a deterministic but distinct
+topology/weight seed and world seed, allowing the same seed range to be reused when
+comparing two configurations.
+
+The response contains per-run reward counts, reward trend between evaluation
+halves, post-warmup path length, final firing rate, weight change and simulated to
+wall-clock ratio. It also returns aggregate mean rewards, sample deviation and
+other means. Input validation and a total-step limit prevent accidental runaway
+requests. The interactive simulation remains unchanged.
+
+The implementation-worker patch was reviewed by the main agent. The complete test
+suite passed 22/22 tests. A packaged HTTP smoke test ran two deterministic 1000 ms
+worlds in 373 ms overall (5.36 times real time including initialization), and an
+invalid request returned HTTP 400. No SSE connection or interactive simulation
+thread was involved.
