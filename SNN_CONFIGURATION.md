@@ -180,15 +180,45 @@ This section defines external input sources to neuron groups.
 ```yaml
 outputs:
   - name: <string>
-    sensor_type: <string>
-    target_group: <string>
-    target_type: <string>
+    output_type: <string>
+    source_group: <string>
+    source_type: <string>
     params:
       # ... (output-specific parameters)
 ```
 ### Properties
 *   `name` (`<string>`): A unique name for the output source.
-*   `sensor_type` (`<string>`): The type of sensor providing the output (e.g. "POPULATION_DRIVE").
-*   `target_group` (`<string>`): The name of group from which the output is taken.
-*   `target_type` (`<string>`): The type of neurons from which the output is taken (can be a specific type or "all").
-*   `params`: A map of output-specific parameters (e.g. "speed_per_spike", "turn_factor" for POPULATION_DRIVE).
+*   `output_type` (`<string>`): The output strategy (e.g. `FORWARD_DRIVE`, `TURN_LEFT`, `TURN_RIGHT`, or `POPULATION_DRIVE`).
+*   `source_group` (`<string>`): The group from which spikes are read.
+*   `source_type` (`<string>`): The neuron type read from that group (a concrete type or `all`).
+*   `params`: A map of output-specific parameters. The built-in output types are:
+    * `FORWARD_DRIVE`: each spike in the source population adds `speed_per_spike` to forward movement.
+    * `TURN_LEFT`: each spike adds `radians_per_spike` to rotation (positive is left).
+    * `TURN_RIGHT`: each spike adds `radians_per_spike` to rotation (negative is right).
+    * `POPULATION_DRIVE`: legacy strategy that splits one population into left and right motor halves.
+
+    `speed_per_spike` and `radians_per_spike` must be finite numbers greater than or equal to zero.
+
+Output bindings are applied in their YAML order. If separate turning and forward
+populations fire in the same step, put turning outputs before `FORWARD_DRIVE` when
+the translation should use the newly updated heading. The legacy
+`POPULATION_DRIVE` combines rotation and translation atomically.
+
+### Examples
+
+```yaml
+outputs:
+  - name: Forward
+    output_type: FORWARD_DRIVE
+    source_group: Cortex.Layer3
+    source_type: RS
+    params:
+      speed_per_spike: 0.1
+
+  - name: TurnLeft
+    output_type: TURN_LEFT
+    source_group: Cortex.Layer3
+    source_type: RS
+    params:
+      radians_per_spike: 0.03
+```

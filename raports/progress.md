@@ -11,6 +11,14 @@ on ultra reasoning. They communicate directly and through their separate
 or routine tests; it is consumed when choosing the next experiments. Subagents do
 not commit or push.
 
+Each mathematical agent also owns `raports/templates-{name}/`. Files use ordered
+names such as `001-short-description.yaml`. Every file must be a complete benchmark-
+ready configuration and begin with YAML comments documenting the hypothesis,
+mathematical mechanism, difference from baseline, expected result, measured
+metrics and rejection criterion. Agents inspect one another's reports and template
+directories to cross-review ideas and avoid duplicate experiments. They never edit
+the production `SNNConfig.yaml` directly.
+
 ## 2026-07-13 - Background activity and hunger drive
 
 The project documentation and `SNN_CONFIGURATION.md` were reviewed before changing
@@ -67,3 +75,15 @@ suite passed 22/22 tests. A packaged HTTP smoke test ran two deterministic 1000 
 worlds in 373 ms overall (5.36 times real time including initialization), and an
 invalid request returned HTTP 400. No SSE connection or interactive simulation
 thread was involved.
+
+## 2026-07-13 - Separate directional motor outputs
+
+The motor layer can now be mapped explicitly with `FORWARD_DRIVE`, `TURN_LEFT` and
+`TURN_RIGHT`. Each strategy converts every spike in its assigned population into a
+configurable displacement or signed rotation. This removes the hidden first-half /
+second-half convention from `POPULATION_DRIVE` and lets experiment configurations
+connect sensory channels to three named motor populations independently.
+
+A faster implementation worker created the strategies and focused tests. Main-
+agent review tightened the public classes, verified exact factory types, corrected
+the output schema documentation and documented binding-order semantics.
