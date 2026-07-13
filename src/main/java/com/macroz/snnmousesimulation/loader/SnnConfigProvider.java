@@ -14,17 +14,25 @@ public class SnnConfigProvider {
     private String configPath;
 
     public SnnNetworkData loadConfig() {
+        return loadConfig(new NetworkTopologyLoader());
+    }
+
+    public SnnNetworkData loadConfig(long seed) {
+        return loadConfig(new NetworkTopologyLoader(seed));
+    }
+
+    private SnnNetworkData loadConfig(NetworkTopologyLoader loader) {
         File externalFile = new File(configPath);
 
         try {
             if (externalFile.exists()) {
                 try (InputStream is = new FileInputStream(externalFile)) {
-                    return new NetworkTopologyLoader().load(is);
+                    return loader.load(is);
                 }
             } else {
                 try (InputStream is = getClass().getResourceAsStream("/config/SNNConfig.yaml")) {
                     if (is == null) throw new RuntimeException("Default config not found in resources!");
-                    return new NetworkTopologyLoader().load(is);
+                    return loader.load(is);
                 }
             }
         } catch (Exception e) {

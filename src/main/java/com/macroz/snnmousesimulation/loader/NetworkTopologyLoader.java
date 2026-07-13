@@ -32,10 +32,22 @@ public class NetworkTopologyLoader {
 
     private GroupInfo rootGroup;
     private int totalNeuronCount = 0;
-    private final Random random = new Random();
+    private final Random random;
 
     private final List<InputConfig> inputConfigs = new ArrayList<>();
     private final List<OutputConfig> outputConfigs = new ArrayList<>();
+
+    public NetworkTopologyLoader() {
+        this(new Random());
+    }
+
+    public NetworkTopologyLoader(long seed) {
+        this(new Random(seed));
+    }
+
+    private NetworkTopologyLoader(Random random) {
+        this.random = random;
+    }
 
     public record GroupPair(GroupInfo from, GroupInfo to) {}
 
@@ -454,13 +466,13 @@ public class NetworkTopologyLoader {
             if (uniformNode != null) {
                 double min = nodeAs(getChildNodeRequired(uniformNode, "min"), Double.class);
                 double max = nodeAs(getChildNodeRequired(uniformNode, "max"), Double.class);
-                return WeightGenerator.createUniform(min, max);
+                return WeightGenerator.createUniform(min, max, random);
             }
 
             if (normalNode != null) {
                 double mean = nodeAs(getChildNodeRequired(normalNode, "mean"), Double.class);
                 double std = nodeAs(getChildNodeRequired(normalNode, "std"), Double.class);
-                return WeightGenerator.createNormal(mean, std);
+                return WeightGenerator.createNormal(mean, std, random);
             }
 
             throw new SnnParseException("Unknown weight type. Expected fixed, uniform or normal.", weightNode.getStartMark());

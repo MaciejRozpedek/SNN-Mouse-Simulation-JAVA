@@ -19,13 +19,25 @@ public class World {
     @Getter
     private final List<Food> food;
 
-    private final Random random = new Random();
+    @Getter
+    private int foodEatenCount = 0;
+    private final List<Double> foodEatenTimesMs = new ArrayList<>();
+    private final Random random;
 
     private static final double EAT_RADIUS = 30.0;
 
     public World(double width, double height, int numberOfFood, SnnNetworkData snnNetworkData) {
+        this(width, height, numberOfFood, snnNetworkData, new Random());
+    }
+
+    public World(double width, double height, int numberOfFood, SnnNetworkData snnNetworkData, long seed) {
+        this(width, height, numberOfFood, snnNetworkData, new Random(seed));
+    }
+
+    private World(double width, double height, int numberOfFood, SnnNetworkData snnNetworkData, Random random) {
         this.width = width;
         this.height = height;
+        this.random = random;
         this.food = new ArrayList<>();
         initializeFood(numberOfFood);
         this.agent = new Agent(width / 2, height / 2, snnNetworkData);
@@ -63,8 +75,14 @@ public class World {
 
     private void handleFoodCollision(Food eatenFood) {
         food.remove(eatenFood);
+        foodEatenCount++;
+        foodEatenTimesMs.add(simulationTimeMs);
         agent.applyReward();
         spawnSingleFood();
+    }
+
+    public List<Double> getFoodEatenTimesMs() {
+        return List.copyOf(foodEatenTimesMs);
     }
 
     private void initializeFood(int numberOfFood) {
