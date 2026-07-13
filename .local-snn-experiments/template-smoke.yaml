@@ -1,0 +1,13 @@
+jar: ../target/snn-mouse-simulation-0.0.1-SNAPSHOT.jar
+baseline_experiment: meitner-001
+
+settings:
+  duration_ms: 2000
+  step_ms: 1
+  burn_in_ms: 200
+  repeats: 1
+  base_seed: 41
+
+experiments:
+  - name: meitner-001
+    config_file: ../raports/templates-meitner/001-slabe-przejscie-l1-l2.yaml

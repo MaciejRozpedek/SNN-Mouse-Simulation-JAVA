@@ -1,0 +1,62 @@
+[
+  {
+    "experiment": "baseline",
+    "repeats": 12,
+    "meanEvaluationRewards": 2.4166666666666665,
+    "rewardStandardDeviation": 2.2343733444579588,
+    "meanRewardTrend": -1.9166666666666667,
+    "meanFinalFiringRateHz": 0.21972222222222224,
+    "meanWeightDelta": 0.062161275313681985,
+    "meanPathLength": 173.5083333333334,
+    "simulatedToWallRatio": 35.08235624545291,
+    "stableRunRatio": 0.75,
+    "firingStable": false,
+    "deltaRewardsVsBaseline": 0.0,
+    "verdict": "reference"
+  },
+  {
+    "experiment": "meitner-007-inhibition-minus3",
+    "repeats": 12,
+    "meanEvaluationRewards": 2.0,
+    "rewardStandardDeviation": 2.412090756622109,
+    "meanRewardTrend": -1.5,
+    "meanFinalFiringRateHz": 0.5391666666666667,
+    "meanWeightDelta": 0.057146264761716324,
+    "meanPathLength": 168.81666666666618,
+    "simulatedToWallRatio": 26.403881062470905,
+    "stableRunRatio": 0.8333333333333334,
+    "firingStable": true,
+    "deltaRewardsVsBaseline": -0.4166666666666665,
+    "verdict": "no_reward_gain"
+  },
+  {
+    "experiment": "meitner-009-inhibition-minus6",
+    "repeats": 12,
+    "meanEvaluationRewards": 1.5,
+    "rewardStandardDeviation": 1.9771421064483223,
+    "meanRewardTrend": -1.5,
+    "meanFinalFiringRateHz": 0.20555555555555557,
+    "meanWeightDelta": 0.028762004250809842,
+    "meanPathLength": 165.32916666666668,
+    "simulatedToWallRatio": 20.75280039801796,
+    "stableRunRatio": 0.6666666666666666,
+    "firingStable": false,
+    "deltaRewardsVsBaseline": -0.9166666666666665,
+    "verdict": "unstable_firing"
+  },
+  {
+    "experiment": "meitner-008-inhibition-minus4",
+    "repeats": 12,
+    "meanEvaluationRewards": 1.4166666666666667,
+    "rewardStandardDeviation": 1.0836246694508316,
+    "meanRewardTrend": -1.0833333333333333,
+    "meanFinalFiringRateHz": 0.2058333333333333,
+    "meanWeightDelta": 0.016948086713225157,
+    "meanPathLength": 176.41249999999943,
+    "simulatedToWallRatio": 23.210818851512435,
+    "stableRunRatio": 0.75,
+    "firingStable": false,
+    "deltaRewardsVsBaseline": -0.9999999999999998,
+    "verdict": "unstable_firing"
+  }
+]

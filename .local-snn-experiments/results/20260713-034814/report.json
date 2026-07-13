@@ -1,0 +1,47 @@
+[
+  {
+    "experiment": "poincare-002-hunger-forward",
+    "repeats": 16,
+    "meanEvaluationRewards": 22.875,
+    "rewardStandardDeviation": 4.924428900898052,
+    "meanRewardTrend": 0.75,
+    "meanFinalFiringRateHz": 3.9389583333333333,
+    "meanWeightDelta": 0.16875259643354282,
+    "meanPathLength": 1959.377041424108,
+    "simulatedToWallRatio": 21.374824400807825,
+    "stableRunRatio": 1.0,
+    "firingStable": true,
+    "deltaRewardsVsBaseline": 22.125,
+    "verdict": "promising"
+  },
+  {
+    "experiment": "poincare-001-topographic-actions",
+    "repeats": 16,
+    "meanEvaluationRewards": 22.6875,
+    "rewardStandardDeviation": 4.7006205264127985,
+    "meanRewardTrend": 2.9375,
+    "meanFinalFiringRateHz": 3.9964583333333334,
+    "meanWeightDelta": 0.1591939634075319,
+    "meanPathLength": 1739.5396807066404,
+    "simulatedToWallRatio": 19.836043310612048,
+    "stableRunRatio": 1.0,
+    "firingStable": true,
+    "deltaRewardsVsBaseline": 21.9375,
+    "verdict": "promising"
+  },
+  {
+    "experiment": "baseline",
+    "repeats": 16,
+    "meanEvaluationRewards": 0.75,
+    "rewardStandardDeviation": 1.0,
+    "meanRewardTrend": -0.375,
+    "meanFinalFiringRateHz": 0.5785416666666667,
+    "meanWeightDelta": 0.050653990596187304,
+    "meanPathLength": 69.09062499999979,
+    "simulatedToWallRatio": 31.538778929435026,
+    "stableRunRatio": 0.4375,
+    "firingStable": false,
+    "deltaRewardsVsBaseline": 0.0,
+    "verdict": "reference"
+  }
+]

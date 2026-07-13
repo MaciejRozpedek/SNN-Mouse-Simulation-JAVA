@@ -1,0 +1,37 @@
+{
+  "base_config": "../src/main/resources/config/SNNConfig.yaml",
+  "jar": "../target/snn-mouse-simulation-0.0.1-SNAPSHOT.jar",
+  "baseline_experiment": "baseline",
+  "settings": {
+    "duration_ms": 60000,
+    "step_ms": 1,
+    "burn_in_ms": 10000,
+    "repeats": 12,
+    "base_seed": 104729,
+    "port": 18090,
+    "startup_timeout_seconds": 30,
+    "benchmark_timeout_seconds": 600,
+    "minimum_repeats": 10,
+    "minimum_stable_run_ratio": 0.8,
+    "firing_rate_min_hz": 0.1,
+    "firing_rate_max_hz": 50.0
+  },
+  "experiments": [
+    {
+      "name": "baseline",
+      "overrides": []
+    },
+    {
+      "name": "meitner-007-inhibition-minus3",
+      "config_file": "../raports/templates-meitner/007-lokalne-hamowanie-minus3.yaml"
+    },
+    {
+      "name": "meitner-008-inhibition-minus4",
+      "config_file": "../raports/templates-meitner/008-lokalne-hamowanie-minus4.yaml"
+    },
+    {
+      "name": "meitner-009-inhibition-minus6",
+      "config_file": "../raports/templates-meitner/009-lokalne-hamowanie-minus6.yaml"
+    }
+  ]
+}

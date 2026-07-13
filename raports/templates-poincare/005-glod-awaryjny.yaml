@@ -1,0 +1,262 @@
+# POINCARE 005 — glod awaryjny po 15 s zastoju.
+# HIPOTEZA: w long screen 002 daje tylko +0.1875 nagrody do 001, a zwieksza droge
+#   o 12.6% i obniza efektywnosc o 10.5%. Glod od 5 s pomaga zastojom, lecz zakloca
+#   czesc skutecznych trajektorii. Pozniejsza aktywacja ma ograniczyc ten koszt.
+# MECHANIZM MATEMATYCZNY: topologia, E/I, prady 3.8/3.5, firing, wagi i DA-STDP
+#   sa identyczne z 002. HUNGER_DRIVE pozostaje tylko na 40 RS Forward i ma
+#   max_current=2, lecz delay rosnie 5 -> 15 s, a rampa skraca sie 20 -> 10 s.
+#   Bias akcji 3.5 przekracza prog ok. 1.5 s po starcie rampy, jesli nie ma resetu
+#   przez posilek. Zmienia sie timing eksploracji i credit assignment, nie gain koncowy.
+# ROZNICA WZGLEDEM BASELINE: jak 002 — jawne akcje i topografia. Wzgledem 002
+#   jedyna zmiana funkcjonalna to harmonogram glodu 5/20 s -> 15/10 s.
+# OCZEKIWANY WYNIK: zgodnosc z 001 w seedach juz skutecznych i ratunek dolnego
+#   ogona po dlugim braku nagrody; mniej niepotrzebnej drogi niz 002.
+# WYNIK KONTROLI 002: true-frozen mean +1.6875 (+8%), mediana +1,
+#   9/16 dodatnich, CI [-0.4375,4], one-sided p=.0947. Uczenie z glodem nie jest
+#   potwierdzone, wiec strojenie harmonogramu ma nizszy priorytet niz replikacja 001.
+# METRYKI: sparowane 005-002 i 005-001 dla evaluationRewards, osobno seedy gdzie
+#   001 przegrywa z baseline, pathLength, rewards/1000 drogi, rewardTrend,
+#   finalFiringRateHz, averageWeightDelta oraz czasy miedzy nagrodami.
+# KONTROLA UCZENIA: uruchomic ten sam YAML jako learningEnabled=true/false.
+#   Porownanie harmonogramu glodu jest wtorne wobec sprawdzenia, czy enabled daje
+#   wiecej nagrod lub lepszy trend niz strukturalna polityka z zamrozonymi wagami.
+# KRYTERIUM ODRZUCENIA: mean lub mediana 005-002 <0, wiecej przegranych niz
+#   zwyciestw, brak ratunku dolnego ogona albo poprawa nagrod wyjasniona wylacznie
+#   dluzsza droga. Najpierw zakonczyc niezalezna replikacje 001 true/frozen.
+# UWAGA LOADERA: allow_autapses=true blokuje self-edge w aktualnym loaderze.
+
+neuron_types:
+  RS:
+    a: 0.02
+    b: 0.2
+    c: -65.0
+    d: 8.0
+    v0: -70.0
+    u0: -14.0
+  FS:
+    a: 0.1
+    b: 0.2
+    c: -65.0
+    d: 2.0
+    v0: -70.0
+    u0: -14.0
+
+groups:
+  - name: Cortex
+    subgroups:
+      - name: Layer1
+        neurons:
+          - type: RS
+            count: 80
+          - type: FS
+            count: 20
+      - name: Layer2
+        subgroups:
+          - name: VisualNegative
+            neurons:
+              - type: RS
+                count: 20
+              - type: FS
+                count: 5
+          - name: VisualCenter
+            neurons:
+              - type: RS
+                count: 40
+              - type: FS
+                count: 10
+          - name: VisualPositive
+            neurons:
+              - type: RS
+                count: 20
+              - type: FS
+                count: 5
+      - name: Layer3
+        subgroups:
+          - name: NegativeTurn
+            neurons:
+              - type: RS
+                count: 20
+              - type: FS
+                count: 5
+          - name: Forward
+            neurons:
+              - type: RS
+                count: 40
+              - type: FS
+                count: 10
+          - name: PositiveTurn
+            neurons:
+              - type: RS
+                count: 20
+              - type: FS
+                count: 5
+
+inputs:
+  - name: VisionFront
+    sensor_type: GAUSSIAN_VISION
+    target_group: Cortex.Layer1
+    target_type: RS
+    params:
+      fov: 120
+      range: 500
+      overlap_factor: 1.5
+      max_current: 6.0
+  - name: AssociationBias
+    sensor_type: TONIC_NOISE
+    target_group: Cortex.Layer2
+    target_type: RS
+    params:
+      base_current: 3.8
+      noise_std: 0.0
+  - name: ActionBias
+    sensor_type: TONIC_NOISE
+    target_group: Cortex.Layer3
+    target_type: RS
+    params:
+      base_current: 3.5
+      noise_std: 0.0
+  - name: HungerForward
+    sensor_type: HUNGER_DRIVE
+    target_group: Cortex.Layer3.Forward
+    target_type: RS
+    params:
+      activation_delay_ms: 15000
+      ramp_duration_ms: 10000
+      max_current: 2.0
+
+outputs:
+  - name: RotateNegative
+    output_type: TURN_RIGHT
+    source_group: Cortex.Layer3.NegativeTurn
+    source_type: RS
+    params:
+      radians_per_spike: 0.02
+  - name: RotatePositive
+    output_type: TURN_LEFT
+    source_group: Cortex.Layer3.PositiveTurn
+    source_type: RS
+    params:
+      radians_per_spike: 0.02
+  - name: MoveForward
+    output_type: FORWARD_DRIVE
+    source_group: Cortex.Layer3.Forward
+    source_type: RS
+    params:
+      speed_per_spike: 0.05
+
+connections:
+  - from: Cortex.Layer1
+    to: Cortex.Layer1
+    from_type: RS
+    to_type: all
+    exclude_self: false
+    weight:
+      uniform:
+        min: 0.5
+        max: 1.0
+    rule:
+      type: probabilistic
+      probability: 0.08
+      allow_autapses: true
+  - from: Cortex.Layer2.[0]
+    to: Cortex.Layer2.[0]
+    from_type: RS
+    to_type: all
+    exclude_self: false
+    weight:
+      uniform:
+        min: 0.5
+        max: 1.0
+    rule:
+      type: probabilistic
+      probability: 0.08
+      allow_autapses: true
+  - from: Cortex.Layer3.[0]
+    to: Cortex.Layer3.[0]
+    from_type: RS
+    to_type: all
+    exclude_self: false
+    weight:
+      uniform:
+        min: 0.5
+        max: 1.0
+    rule:
+      type: probabilistic
+      probability: 0.08
+      allow_autapses: true
+  - from: Cortex.Layer1
+    to: Cortex.Layer1
+    from_type: FS
+    to_type: RS
+    exclude_self: false
+    weight:
+      fixed: -2.0
+    rule:
+      type: fixed_out_degree
+      count: 10
+      allow_autapses: false
+  - from: Cortex.Layer2.[0]
+    to: Cortex.Layer2.[0]
+    from_type: FS
+    to_type: RS
+    exclude_self: false
+    weight:
+      fixed: -2.0
+    rule:
+      type: fixed_out_degree
+      count: 10
+      allow_autapses: false
+  - from: Cortex.Layer3.[0]
+    to: Cortex.Layer3.[0]
+    from_type: FS
+    to_type: RS
+    exclude_self: false
+    weight:
+      fixed: -2.0
+    rule:
+      type: fixed_out_degree
+      count: 10
+      allow_autapses: false
+  - from: Cortex.Layer1
+    to: Cortex.Layer2
+    from_type: RS
+    to_type: RS
+    exclude_self: false
+    weight:
+      fixed: 5.0
+    rule:
+      type: one_to_one
+      allow_autapses: false
+  - from: Cortex.Layer2.VisualNegative
+    to: Cortex.Layer3.NegativeTurn
+    from_type: RS
+    to_type: RS
+    exclude_self: false
+    weight:
+      fixed: 4.0
+    rule:
+      type: fixed_in_degree
+      count: 4
+      allow_autapses: false
+  - from: Cortex.Layer2.VisualCenter
+    to: Cortex.Layer3.Forward
+    from_type: RS
+    to_type: RS
+    exclude_self: false
+    weight:
+      fixed: 4.0
+    rule:
+      type: fixed_in_degree
+      count: 4
+      allow_autapses: false
+  - from: Cortex.Layer2.VisualPositive
+    to: Cortex.Layer3.PositiveTurn
+    from_type: RS
+    to_type: RS
+    exclude_self: false
+    weight:
+      fixed: 4.0
+    rule:
+      type: fixed_in_degree
+      count: 4
+      allow_autapses: false

@@ -1,0 +1,46 @@
+{
+  "experiment": "poincare-001",
+  "configFile": "C:\\Users\\macie\\Documents\\maciek\\programowanie\\Java\\snn-mouse-simulation\\raports\\templates-poincare\\001-topograficzne-akcje.yaml",
+  "overrides": [],
+  "startedAt": "2026-07-13T04:25:35.007086+02:00",
+  "benchmarkSettings": {},
+  "status": "completed",
+  "benchmark": {
+    "parameters": {
+      "durationMs": 1000.0,
+      "stepMs": 1.0,
+      "burnInMs": 100.0,
+      "repeats": 1,
+      "baseSeed": 3000017,
+      "learningEnabled": true
+    },
+    "summary": {
+      "wallTimeMs": 241,
+      "simulatedToWallRatio": 4.1556921762445675,
+      "meanEvaluationRewards": 0.0,
+      "rewardStandardDeviation": 0.0,
+      "meanRewardTrend": 0.0,
+      "meanFinalFiringRateHz": 3.6033333333333335,
+      "meanWeightDelta": 0.0,
+      "meanPathLength": 10.000000000000131
+    },
+    "runs": [
+      {
+        "index": 1,
+        "seed": 3000017,
+        "wallTimeMs": 203,
+        "simulatedToWallRatio": 4.916747178401713,
+        "totalRewards": 0,
+        "evaluationRewards": 0,
+        "firstHalfRewards": 0,
+        "secondHalfRewards": 0,
+        "rewardTrend": 0,
+        "pathLength": 10.000000000000131,
+        "finalFiringRateHz": 3.6033333333333335,
+        "initialAverageWeight": 0.6224929239507793,
+        "finalAverageWeight": 0.6224929239507793,
+        "averageWeightDelta": 0.0
+      }
+    ]
+  }
+}

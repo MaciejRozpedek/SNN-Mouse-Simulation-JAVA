@@ -1,0 +1,4 @@
+experiment,repeats,meanEvaluationRewards,rewardStandardDeviation,meanRewardTrend,meanFinalFiringRateHz,meanWeightDelta,meanPathLength,simulatedToWallRatio,deltaRewardsVsBaseline,stableRunRatio,firingStable,verdict
+poincare-002-hunger-forward,16,22.875,4.924428900898052,0.75,3.9389583333333333,0.16875259643354282,1959.377041424108,21.374824400807825,22.125,1.0,True,promising
+poincare-001-topographic-actions,16,22.6875,4.7006205264127985,2.9375,3.9964583333333334,0.1591939634075319,1739.5396807066404,19.836043310612048,21.9375,1.0,True,promising
+baseline,16,0.75,1.0,-0.375,0.5785416666666667,0.050653990596187304,69.09062499999979,31.538778929435026,0.0,0.4375,False,reference

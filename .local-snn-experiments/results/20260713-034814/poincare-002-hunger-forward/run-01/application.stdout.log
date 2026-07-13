@@ -1,0 +1,13 @@
+2026-07-13T03:52:45.464+02:00  INFO 20672 --- [snn-mouse-simulation] [           main] c.m.s.SnnMouseSimulationApplication      : Starting SnnMouseSimulationApplication v0.0.1-SNAPSHOT using Java 21.0.1 with PID 20672 (C:\Users\macie\Documents\maciek\programowanie\Java\snn-mouse-simulation\target\snn-mouse-simulation-0.0.1-SNAPSHOT.jar started by admin in C:\Users\macie\Documents\maciek\programowanie\Java\snn-mouse-simulation)
+2026-07-13T03:52:45.480+02:00  INFO 20672 --- [snn-mouse-simulation] [           main] c.m.s.SnnMouseSimulationApplication      : No active profile set, falling back to 1 default profile: "default"
+2026-07-13T03:52:50.392+02:00  INFO 20672 --- [snn-mouse-simulation] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 18080 (http)
+2026-07-13T03:52:50.424+02:00  INFO 20672 --- [snn-mouse-simulation] [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-07-13T03:52:50.424+02:00  INFO 20672 --- [snn-mouse-simulation] [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.50]
+2026-07-13T03:52:50.555+02:00  INFO 20672 --- [snn-mouse-simulation] [           main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2026-07-13T03:52:50.561+02:00  INFO 20672 --- [snn-mouse-simulation] [           main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 4791 ms
+2026-07-13T03:52:51.121+02:00  INFO 20672 --- [snn-mouse-simulation] [           main] o.s.b.a.w.s.WelcomePageHandlerMapping    : Adding welcome page: class path resource [static/index.html]
+2026-07-13T03:52:53.251+02:00  INFO 20672 --- [snn-mouse-simulation] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 18080 (http) with context path '/'
+2026-07-13T03:52:53.314+02:00  INFO 20672 --- [snn-mouse-simulation] [           main] c.m.s.SnnMouseSimulationApplication      : Started SnnMouseSimulationApplication in 10.265 seconds (process running for 12.841)
+2026-07-13T03:52:53.832+02:00  INFO 20672 --- [snn-mouse-simulation] [io-18080-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-07-13T03:52:53.832+02:00  INFO 20672 --- [snn-mouse-simulation] [io-18080-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-07-13T03:52:53.832+02:00  INFO 20672 --- [snn-mouse-simulation] [io-18080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 0 ms

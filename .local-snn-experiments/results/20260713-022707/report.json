@@ -1,0 +1,30 @@
+[
+  {
+    "experiment": "smoke-baseline",
+    "runs": 1,
+    "meanRewards": 1.0,
+    "stdevRewards": 0.0,
+    "meanRewardTrend": -1.0,
+    "meanFiringRateHz": 5.074378333333333,
+    "meanWeightDelta": -0.004903488849001825,
+    "plasticityRunRatio": 1.0,
+    "activeRunRatio": 1.0,
+    "meanPathLength": 43.749999999999204,
+    "rewardDeltaVsBaseline": 0.0,
+    "verdict": "reference"
+  },
+  {
+    "experiment": "smoke-modified-current",
+    "runs": 1,
+    "meanRewards": 0.0,
+    "stdevRewards": 0.0,
+    "meanRewardTrend": 0.0,
+    "meanFiringRateHz": 3.230801666666667,
+    "meanWeightDelta": 0.0,
+    "plasticityRunRatio": 0.0,
+    "activeRunRatio": 1.0,
+    "meanPathLength": 33.64999999999941,
+    "rewardDeltaVsBaseline": -1.0,
+    "verdict": "insufficient_repeats"
+  }
+]

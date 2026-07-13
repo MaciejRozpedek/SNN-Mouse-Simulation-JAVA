@@ -1,0 +1,30 @@
+{
+  "experiment": "smoke-baseline",
+  "repeat": 1,
+  "baseConfig": "C:\\Users\\macie\\Documents\\maciek\\programowanie\\Java\\snn-mouse-simulation\\src\\main\\resources\\config\\SNNConfig.yaml",
+  "overrides": [],
+  "startedAt": "2026-07-13T02:27:07.801711+02:00",
+  "simulationTimeMs": 2000.0,
+  "statesReceived": 2000,
+  "totalSpikesObserved": 3710,
+  "activeStepRatio": 0.457,
+  "meanFiringRateHz": 5.074378333333333,
+  "maxFiringRateHz": 7.483333333333333,
+  "activityStatus": "active",
+  "rewardCountInferred": 1,
+  "rewardTimesMs": [
+    1.0
+  ],
+  "firstHalfRewards": 1,
+  "secondHalfRewards": 0,
+  "rewardTrend": -1,
+  "pathLength": 43.749999999999204,
+  "initialAverageWeight": 4.213874077865034,
+  "finalAverageWeight": 4.208970589016032,
+  "averageWeightDelta": -0.004903488849001825,
+  "averageWeightSpan": 0.02117140645938065,
+  "plasticityDetected": true,
+  "finalMinWeight": -2.0,
+  "finalMaxWeight": 13.041362355907717,
+  "status": "completed"
+}

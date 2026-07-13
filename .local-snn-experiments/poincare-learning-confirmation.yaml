@@ -1,0 +1,27 @@
+jar: ../target/snn-mouse-simulation-0.0.1-SNAPSHOT.jar
+baseline_experiment: poincare-001-frozen
+
+settings:
+  duration_ms: 180000
+  step_ms: 1
+  burn_in_ms: 30000
+  repeats: 30
+  base_seed: 1000003
+  port: 18080
+  startup_timeout_seconds: 30
+  benchmark_timeout_seconds: 1200
+  minimum_repeats: 10
+  firing_rate_min_hz: 0.1
+  firing_rate_max_hz: 50.0
+  minimum_stable_run_ratio: 0.8
+
+experiments:
+  - name: poincare-001-frozen
+    config_file: results/20260713-034814/poincare-001-topographic-actions/run-01/candidate.yaml
+    benchmark_settings:
+      learning_enabled: false
+
+  - name: poincare-001-learning
+    config_file: results/20260713-034814/poincare-001-topographic-actions/run-01/candidate.yaml
+    benchmark_settings:
+      learning_enabled: true

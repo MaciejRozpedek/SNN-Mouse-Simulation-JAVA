@@ -1,0 +1,3 @@
+experiment,repeats,meanEvaluationRewards,rewardStandardDeviation,meanRewardTrend,meanFinalFiringRateHz,meanWeightDelta,meanPathLength,simulatedToWallRatio,deltaRewardsVsBaseline,stableRunRatio,firingStable,verdict
+smoke-baseline,1,0.0,0.0,0.0,7.51,0.0,55.19999999999952,6.084397900152596,0.0,1.0,True,reference
+smoke-modified-current,1,0.0,0.0,0.0,9.28,0.0,52.79999999999893,2.945201434843235,0.0,1.0,True,insufficient_repeats

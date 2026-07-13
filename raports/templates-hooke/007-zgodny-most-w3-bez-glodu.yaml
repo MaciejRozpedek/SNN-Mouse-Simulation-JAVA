@@ -1,0 +1,198 @@
+# HOOKE 007 — zgodny most w=3 bez głodu, kandydat do protokołu fazowego
+# Hipoteza: HUNGER_DRIVE zwiększa politykę frozen przez bezpośrednią eksplorację,
+# ale zmniejsza headroom i rozmywa eligibility–reward. Usunięcie głodu powinno
+# zwiększyć przyrost true-frozen i retencję, choć może obniżyć bezwzględną drogę.
+# Mechanizm matematyczny:
+# - Rdzeń jest identyczny z Hooke005: N=200 (160 RS/40 FS), oczekiwane lokalne
+#   E=584, dokładne I=200 i 640 zgodnych synaps mostu, fan-in 8, waga 3.0.
+# - Vision+tonic ustawia Sensory blisko progu, a Motor ma tonic 2+N(0,0.7);
+#   skorelowany volley przechodzi w 1 ms, w oknie STDP 5 ms i eligibility 1000 ms.
+# - Usunięto tylko HungerForward: brak rampy 0->3 po 5–25 s i resetu po nagrodzie.
+#   Zmniejsza to bezpośredni napęd Forward oraz korelacje wywołane zegarem głodu.
+# - Poincaré001/002 wskazuje mechanizm: głód podniósł frozen o ok. 2.56 nagrody,
+#   lecz punktowy learning gain spadł o 2.375. 007 testuje analogiczną interakcję.
+# Różnica względem baseline: jawne akcje, rzadka mapa kąta i znacznie mniejszy
+# fan-in; względem Hooke005 jedyną zmianą funkcjonalną jest brak HUNGER_DRIVE.
+# Oczekiwany wynik: mniejsza droga i możliwie niższy frozen reward niż 005, ale
+# większe rewards_true-frozen, dodatnia retencja train->freeze i lepszy udział
+# efektu uczenia w wyniku końcowym. Całkowity true reward nie powinien spaść >10%.
+# Metryki: trzy ramiona always-frozen/learn-then-freeze/continuous; post-freeze
+# rewards, first/second half, path, rewards/1000 drogi, firing, weight at freeze,
+# postFreezeWeightDelta oraz interakcja (true-frozen)_007-(true-frozen)_005.
+# Kryterium odrzucenia: brak ruchu w >10% runów, niestabilny firing, post-freeze
+# delta wag !=0, mean/mediana retencji <=0, interakcja z 005 <=0 albo spadek
+# całkowitego true reward >10% bez poprawy efektywności. Raportować pełne CI/testy.
+# Protokół: nie blokować Poincaré001. Po jego retencji użyć durationMs=300000,
+# train/freeze=180000, post-freeze=120000, repeats=30, stepMs=1 i nowych seedów;
+# ten sam YAML uruchomić w trzech ramionach — parametr freeze nie należy do YAML.
+
+neuron_types:
+  RS:
+    a: 0.02
+    b: 0.2
+    c: -65.0
+    d: 8.0
+    v0: -70.0
+    u0: -14.0
+  FS:
+    a: 0.1
+    b: 0.2
+    c: -65.0
+    d: 2.0
+    v0: -70.0
+    u0: -14.0
+
+groups:
+  - name: Cortex
+    subgroups:
+      - name: Sensory
+        subgroups:
+          - name: VisionLeft
+            neurons:
+              - type: RS
+                count: 20
+              - type: FS
+                count: 5
+          - name: VisionCenter
+            neurons:
+              - type: RS
+                count: 40
+              - type: FS
+                count: 10
+          - name: VisionRight
+            neurons:
+              - type: RS
+                count: 20
+              - type: FS
+                count: 5
+      - name: Motor
+        subgroups:
+          - name: TurnLeft
+            neurons:
+              - type: RS
+                count: 20
+              - type: FS
+                count: 5
+          - name: Forward
+            neurons:
+              - type: RS
+                count: 40
+              - type: FS
+                count: 10
+          - name: TurnRight
+            neurons:
+              - type: RS
+                count: 20
+              - type: FS
+                count: 5
+
+inputs:
+  - name: OrderedVision
+    sensor_type: GAUSSIAN_VISION
+    target_group: Cortex.Sensory
+    target_type: RS
+    params:
+      fov: 120
+      range: 500
+      overlap_factor: 1.5
+      max_current: 8.0
+
+  - name: SensoryBackground
+    sensor_type: TONIC_NOISE
+    target_group: Cortex.Sensory
+    target_type: RS
+    params:
+      base_current: 1.5
+      noise_std: 0.5
+      seed: 61001
+
+  - name: MotorExploration
+    sensor_type: TONIC_NOISE
+    target_group: Cortex.Motor
+    target_type: RS
+    params:
+      base_current: 2.0
+      noise_std: 0.7
+      seed: 62001
+
+outputs:
+  - name: ExplicitTurnLeft
+    output_type: TURN_LEFT
+    source_group: Cortex.Motor.TurnLeft
+    source_type: RS
+    params:
+      radians_per_spike: 0.02
+
+  - name: ExplicitTurnRight
+    output_type: TURN_RIGHT
+    source_group: Cortex.Motor.TurnRight
+    source_type: RS
+    params:
+      radians_per_spike: 0.02
+
+  - name: ExplicitForward
+    output_type: FORWARD_DRIVE
+    source_group: Cortex.Motor.Forward
+    source_type: RS
+    params:
+      speed_per_spike: 0.05
+
+connections:
+  - from: Cortex.[0].[1]
+    to: Cortex.[0].[1]
+    from_type: RS
+    to_type: all
+    weight:
+      uniform:
+        min: 0.5
+        max: 1.0
+    rule:
+      type: probabilistic
+      probability: 0.1
+      # Loader ma odwróconą semantykę: true faktycznie blokuje autapsy.
+      allow_autapses: true
+
+  - from: Cortex.[0].[1]
+    to: Cortex.[0].[1]
+    from_type: FS
+    to_type: RS
+    weight:
+      fixed: -2.5
+    rule:
+      type: fixed_out_degree
+      count: 5
+      allow_autapses: false
+
+  - from: Cortex.Sensory.VisionLeft
+    to: Cortex.Motor.TurnRight
+    from_type: RS
+    to_type: RS
+    weight:
+      fixed: 3.0
+    rule:
+      type: fixed_in_degree
+      count: 8
+      allow_autapses: false
+
+  - from: Cortex.Sensory.VisionCenter
+    to: Cortex.Motor.Forward
+    from_type: RS
+    to_type: RS
+    weight:
+      fixed: 3.0
+    rule:
+      type: fixed_in_degree
+      count: 8
+      allow_autapses: false
+
+  - from: Cortex.Sensory.VisionRight
+    to: Cortex.Motor.TurnLeft
+    from_type: RS
+    to_type: RS
+    weight:
+      fixed: 3.0
+    rule:
+      type: fixed_in_degree
+      count: 8
+      allow_autapses: false
+

@@ -1,0 +1,3 @@
+experiment,runs,meanRewards,stdevRewards,meanRewardTrend,meanFiringRateHz,meanWeightDelta,plasticityRunRatio,meanPathLength
+smoke-baseline,1,0.0,0.0,0.0,4.93874,0.0,0.0,41.79999999999934
+smoke-modified-current,1,0.0,0.0,0.0,4.07845,0.0,0.0,43.14999999999956

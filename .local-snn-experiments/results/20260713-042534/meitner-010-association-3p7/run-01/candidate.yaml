@@ -1,0 +1,173 @@
+# MEITNER 010 — Poincare001 z sensoryczna bramka warstwy asocjacyjnej I=3.7.
+# HIPOTEZA I POWOD: P001 przy AssociationBias=3.8 lezy minimalnie ponad numerycznym
+# progiem RS ok. 3.7984 i moze tworzyc autonomiczne spike'i niezalezne od vision.
+# Obnizenie tylko tego biasu do 3.7 powinno zachowac wysoka wydajnosc P001, ale
+# zwiekszyc udzial spike'ow Layer2 przyczynowo wywolanych bodzcem sensorycznym.
+# MECHANIZM MATEMATYCZNY: dla I=3.7 odleglosc stabilny punkt–separator wynosi
+# 10*sqrt(4-I)=5.477 mV, nieco wiecej niz one_to_one L1->L2 o wadze 5. Pojedynczy
+# idealny EPSP jest graniczny; vision, lokalne E i stan v musza wspolnie otworzyc
+# bramke. E/I, action bias=3.5, wagi akcji=4, firing FS i wszystkie opoznienia sa
+# jak w P001. Rzadsze przypadkowe post-spike'i maja zmniejszyc szum eligibility;
+# DA-STDP 5 ms/eligibility 1000 ms powinno preferowac sensorycznie causal sciezki.
+# ROZNICA WOBEC BASELINE: baseline eksperymentalnym jest archiwalny Poincare001;
+# jedyna zmiana to AssociationBias base_current 3.8 -> 3.7. Produkcyjny baseline
+# nie jest rdzeniem tej serii. learningEnabled/freezeLearningAtMs sa parametrami
+# runnera i ten sam YAML musi byc uzyty w ramionach true/frozen/learn->freeze.
+# OCZEKIWANY WYNIK: frozen zachowa znak i >=90% drogi/nagrod P001; true-frozen
+# pozostanie dodatnie, a w fazie post-freeze wzrosnie rewards/1000 drogi przez
+# lepsza lokalnosc credit assignment bez utraty stabilnego firing.
+# METRYKI: frozen i true rewards, path, rewards/1000 path, firing per populacja,
+# true-frozen oraz interakcja z P001; w phase protocol postFreezeRewards,
+# postFreezeWeightDelta=0, retencja w obu polowach i kwantyle wag per projekcja.
+# KRYTERIUM ODRZUCENIA: >10% runow bez ruchu, frozen <90% P001, niestabilny firing,
+# mean/mediana true-frozen <=0, ujemna interakcja do P001 albo brak dodatniej
+# retencji po freeze. Najpierw zakonczyc phase test P001; nie stroic na 104729+.
+
+neuron_types:
+  RS: {a: 0.02, b: 0.2, c: -65.0, d: 8.0, v0: -70.0, u0: -14.0}
+  FS: {a: 0.1, b: 0.2, c: -65.0, d: 2.0, v0: -70.0, u0: -14.0}
+
+groups:
+  - name: Cortex
+    subgroups:
+      - name: Layer1
+        neurons:
+          - {type: RS, count: 80}
+          - {type: FS, count: 20}
+      - name: Layer2
+        subgroups:
+          - name: VisualNegative
+            neurons:
+              - {type: RS, count: 20}
+              - {type: FS, count: 5}
+          - name: VisualCenter
+            neurons:
+              - {type: RS, count: 40}
+              - {type: FS, count: 10}
+          - name: VisualPositive
+            neurons:
+              - {type: RS, count: 20}
+              - {type: FS, count: 5}
+      - name: Layer3
+        subgroups:
+          - name: NegativeTurn
+            neurons:
+              - {type: RS, count: 20}
+              - {type: FS, count: 5}
+          - name: Forward
+            neurons:
+              - {type: RS, count: 40}
+              - {type: FS, count: 10}
+          - name: PositiveTurn
+            neurons:
+              - {type: RS, count: 20}
+              - {type: FS, count: 5}
+
+inputs:
+  - name: VisionFront
+    sensor_type: GAUSSIAN_VISION
+    target_group: Cortex.Layer1
+    target_type: RS
+    params: {fov: 120, range: 500, overlap_factor: 1.5, max_current: 6.0}
+  - name: AssociationBias
+    sensor_type: TONIC_NOISE
+    target_group: Cortex.Layer2
+    target_type: RS
+    params: {base_current: 3.7, noise_std: 0.0}
+  - name: ActionBias
+    sensor_type: TONIC_NOISE
+    target_group: Cortex.Layer3
+    target_type: RS
+    params: {base_current: 3.5, noise_std: 0.0}
+
+outputs:
+  - name: RotateNegative
+    output_type: TURN_RIGHT
+    source_group: Cortex.Layer3.NegativeTurn
+    source_type: RS
+    params: {radians_per_spike: 0.02}
+  - name: RotatePositive
+    output_type: TURN_LEFT
+    source_group: Cortex.Layer3.PositiveTurn
+    source_type: RS
+    params: {radians_per_spike: 0.02}
+  - name: MoveForward
+    output_type: FORWARD_DRIVE
+    source_group: Cortex.Layer3.Forward
+    source_type: RS
+    params: {speed_per_spike: 0.05}
+
+connections:
+  - from: Cortex.Layer1
+    to: Cortex.Layer1
+    from_type: RS
+    to_type: all
+    exclude_self: false
+    weight:
+      uniform: {min: 0.5, max: 1.0}
+    rule: {type: probabilistic, probability: 0.08, allow_autapses: true}
+  - from: Cortex.Layer2.[0]
+    to: Cortex.Layer2.[0]
+    from_type: RS
+    to_type: all
+    exclude_self: false
+    weight:
+      uniform: {min: 0.5, max: 1.0}
+    rule: {type: probabilistic, probability: 0.08, allow_autapses: true}
+  - from: Cortex.Layer3.[0]
+    to: Cortex.Layer3.[0]
+    from_type: RS
+    to_type: all
+    exclude_self: false
+    weight:
+      uniform: {min: 0.5, max: 1.0}
+    rule: {type: probabilistic, probability: 0.08, allow_autapses: true}
+  - from: Cortex.Layer1
+    to: Cortex.Layer1
+    from_type: FS
+    to_type: RS
+    exclude_self: false
+    weight: {fixed: -2.0}
+    rule: {type: fixed_out_degree, count: 10, allow_autapses: false}
+  - from: Cortex.Layer2.[0]
+    to: Cortex.Layer2.[0]
+    from_type: FS
+    to_type: RS
+    exclude_self: false
+    weight: {fixed: -2.0}
+    rule: {type: fixed_out_degree, count: 10, allow_autapses: false}
+  - from: Cortex.Layer3.[0]
+    to: Cortex.Layer3.[0]
+    from_type: FS
+    to_type: RS
+    exclude_self: false
+    weight: {fixed: -2.0}
+    rule: {type: fixed_out_degree, count: 10, allow_autapses: false}
+  - from: Cortex.Layer1
+    to: Cortex.Layer2
+    from_type: RS
+    to_type: RS
+    exclude_self: false
+    weight: {fixed: 5.0}
+    rule: {type: one_to_one, allow_autapses: false}
+  - from: Cortex.Layer2.VisualNegative
+    to: Cortex.Layer3.NegativeTurn
+    from_type: RS
+    to_type: RS
+    exclude_self: false
+    weight: {fixed: 4.0}
+    rule: {type: fixed_in_degree, count: 4, allow_autapses: false}
+  - from: Cortex.Layer2.VisualCenter
+    to: Cortex.Layer3.Forward
+    from_type: RS
+    to_type: RS
+    exclude_self: false
+    weight: {fixed: 4.0}
+    rule: {type: fixed_in_degree, count: 4, allow_autapses: false}
+  - from: Cortex.Layer2.VisualPositive
+    to: Cortex.Layer3.PositiveTurn
+    from_type: RS
+    to_type: RS
+    exclude_self: false
+    weight: {fixed: 4.0}
+    rule: {type: fixed_in_degree, count: 4, allow_autapses: false}

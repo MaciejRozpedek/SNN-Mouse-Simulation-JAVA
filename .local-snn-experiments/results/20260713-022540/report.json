@@ -1,0 +1,24 @@
+[
+  {
+    "experiment": "smoke-baseline",
+    "runs": 1,
+    "meanRewards": 0.0,
+    "stdevRewards": 0.0,
+    "meanRewardTrend": 0.0,
+    "meanFiringRateHz": 4.93874,
+    "meanWeightDelta": 0.0,
+    "plasticityRunRatio": 0.0,
+    "meanPathLength": 41.79999999999934
+  },
+  {
+    "experiment": "smoke-modified-current",
+    "runs": 1,
+    "meanRewards": 0.0,
+    "stdevRewards": 0.0,
+    "meanRewardTrend": 0.0,
+    "meanFiringRateHz": 4.07845,
+    "meanWeightDelta": 0.0,
+    "plasticityRunRatio": 0.0,
+    "meanPathLength": 43.14999999999956
+  }
+]

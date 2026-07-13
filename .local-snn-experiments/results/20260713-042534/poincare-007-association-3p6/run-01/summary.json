@@ -1,0 +1,46 @@
+{
+  "experiment": "poincare-007-association-3p6",
+  "configFile": "C:\\Users\\macie\\Documents\\maciek\\programowanie\\Java\\snn-mouse-simulation\\raports\\templates-poincare\\007-nizszy-bias-layer2.yaml",
+  "overrides": [],
+  "startedAt": "2026-07-13T04:25:51.021327+02:00",
+  "benchmarkSettings": {},
+  "status": "completed",
+  "benchmark": {
+    "parameters": {
+      "durationMs": 1000.0,
+      "stepMs": 1.0,
+      "burnInMs": 100.0,
+      "repeats": 1,
+      "baseSeed": 3000017,
+      "learningEnabled": true
+    },
+    "summary": {
+      "wallTimeMs": 209,
+      "simulatedToWallRatio": 4.77526413179729,
+      "meanEvaluationRewards": 0.0,
+      "rewardStandardDeviation": 0.0,
+      "meanRewardTrend": 0.0,
+      "meanFinalFiringRateHz": 0.92,
+      "meanWeightDelta": 0.0,
+      "meanPathLength": 1.7500000000001137
+    },
+    "runs": [
+      {
+        "index": 1,
+        "seed": 3000017,
+        "wallTimeMs": 176,
+        "simulatedToWallRatio": 5.672323485801607,
+        "totalRewards": 0,
+        "evaluationRewards": 0,
+        "firstHalfRewards": 0,
+        "secondHalfRewards": 0,
+        "rewardTrend": 0,
+        "pathLength": 1.7500000000001137,
+        "finalFiringRateHz": 0.92,
+        "initialAverageWeight": 0.6224929239507793,
+        "finalAverageWeight": 0.6224929239507793,
+        "averageWeightDelta": 0.0
+      }
+    ]
+  }
+}

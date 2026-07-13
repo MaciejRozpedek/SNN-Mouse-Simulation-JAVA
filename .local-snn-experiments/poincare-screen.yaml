@@ -1,0 +1,30 @@
+base_config: ../src/main/resources/config/SNNConfig.yaml
+jar: ../target/snn-mouse-simulation-0.0.1-SNAPSHOT.jar
+baseline_experiment: baseline
+
+settings:
+  duration_ms: 30000
+  step_ms: 1
+  burn_in_ms: 5000
+  repeats: 10
+  base_seed: 104729
+  port: 18080
+  startup_timeout_seconds: 30
+  benchmark_timeout_seconds: 600
+  minimum_repeats: 10
+  firing_rate_min_hz: 0.1
+  firing_rate_max_hz: 50.0
+  minimum_stable_run_ratio: 0.8
+
+experiments:
+  - name: baseline
+    overrides: []
+
+  - name: poincare-001-topographic-actions
+    config_file: ../raports/templates-poincare/001-topograficzne-akcje.yaml
+
+  - name: poincare-002-hunger-forward
+    config_file: ../raports/templates-poincare/002-glod-do-przodu.yaml
+
+  - name: poincare-003-arc-approach
+    config_file: ../raports/templates-poincare/003-lukowe-podejscie.yaml

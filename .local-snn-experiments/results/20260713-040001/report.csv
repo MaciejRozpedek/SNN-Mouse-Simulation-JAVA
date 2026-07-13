@@ -1,0 +1,4 @@
+experiment,learningEnabled,repeats,meanEvaluationRewards,rewardStandardDeviation,meanRewardTrend,meanFinalFiringRateHz,meanWeightDelta,meanPathLength,simulatedToWallRatio,deltaRewardsVsBaseline,stableRunRatio,firingStable,verdict
+smoke-baseline,True,1,0.0,0.0,0.0,7.51,0.0,55.19999999999952,7.098174136666825,0.0,1.0,True,reference
+smoke-modified-current,True,1,0.0,0.0,0.0,9.28,0.0,52.79999999999893,7.471186435612754,0.0,1.0,True,insufficient_repeats
+smoke-without-learning,False,1,0.0,0.0,0.0,7.51,0.0,55.19999999999952,4.2264212186632,0.0,1.0,True,insufficient_repeats

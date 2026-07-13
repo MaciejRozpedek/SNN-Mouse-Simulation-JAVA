@@ -1,0 +1,27 @@
+base_config: ../raports/templates-poincare/001-topograficzne-akcje.yaml
+jar: ../target/snn-mouse-simulation-0.0.1-SNAPSHOT.jar
+baseline_experiment: poincare-001
+
+settings:
+  duration_ms: 1000
+  step_ms: 1
+  burn_in_ms: 100
+  repeats: 1
+  base_seed: 3000017
+  port: 18092
+  startup_timeout_seconds: 30
+  benchmark_timeout_seconds: 120
+  minimum_repeats: 1
+  minimum_stable_run_ratio: 0.0
+  firing_rate_min_hz: 0.0
+  firing_rate_max_hz: 1000.0
+
+experiments:
+  - name: poincare-001
+    config_file: ../raports/templates-poincare/001-topograficzne-akcje.yaml
+  - name: meitner-010-association-3p7
+    config_file: ../raports/templates-meitner/010-bramka-asocjacyjna-3p7.yaml
+  - name: poincare-007-association-3p6
+    config_file: ../raports/templates-poincare/007-nizszy-bias-layer2.yaml
+  - name: meitner-011-association-3p5
+    config_file: ../raports/templates-meitner/011-bramka-asocjacyjna-3p5.yaml

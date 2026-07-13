@@ -1,0 +1,13 @@
+[
+  {
+    "experiment": "smoke-modified-current",
+    "runs": 1,
+    "meanRewards": 0.0,
+    "stdevRewards": 0.0,
+    "meanRewardTrend": 0.0,
+    "meanFiringRateHz": 7.368526666666667,
+    "meanWeightDelta": 0.0,
+    "plasticityRunRatio": 0.0,
+    "meanPathLength": 74.44999999999949
+  }
+]

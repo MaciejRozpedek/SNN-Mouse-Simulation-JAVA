@@ -1,0 +1,5 @@
+experiment,learningEnabled,repeats,meanEvaluationRewards,rewardStandardDeviation,meanRewardTrend,meanFinalFiringRateHz,meanWeightDelta,meanPathLength,simulatedToWallRatio,deltaRewardsVsBaseline,stableRunRatio,firingStable,verdict
+poincare-001,True,1,0.0,0.0,0.0,3.6033333333333335,0.0,10.000000000000131,3.6373225668585354,0.0,1.0,True,reference
+meitner-010-association-3p7,True,1,0.0,0.0,0.0,0.9366666666666666,0.0,1.7500000000001705,3.202037007862922,0.0,1.0,True,no_reward_gain
+meitner-011-association-3p6,True,1,0.0,0.0,0.0,0.92,0.0,1.7500000000001137,4.010367602325532,0.0,1.0,True,no_reward_gain
+meitner-012-association-3p5,True,1,0.0,0.0,0.0,0.9433333333333334,0.0,1.8500000000001364,3.5701267502100125,0.0,1.0,True,no_reward_gain

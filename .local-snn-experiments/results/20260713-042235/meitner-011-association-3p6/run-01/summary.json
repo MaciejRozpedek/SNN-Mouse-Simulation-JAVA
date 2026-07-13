@@ -1,0 +1,46 @@
+{
+  "experiment": "meitner-011-association-3p6",
+  "configFile": "C:\\Users\\macie\\Documents\\maciek\\programowanie\\Java\\snn-mouse-simulation\\raports\\templates-meitner\\011-bramka-asocjacyjna-3p6.yaml",
+  "overrides": [],
+  "startedAt": "2026-07-13T04:22:52.809933+02:00",
+  "benchmarkSettings": {},
+  "status": "completed",
+  "benchmark": {
+    "parameters": {
+      "durationMs": 1000.0,
+      "stepMs": 1.0,
+      "burnInMs": 100.0,
+      "repeats": 1,
+      "baseSeed": 3000017,
+      "learningEnabled": true
+    },
+    "summary": {
+      "wallTimeMs": 249,
+      "simulatedToWallRatio": 4.010367602325532,
+      "meanEvaluationRewards": 0.0,
+      "rewardStandardDeviation": 0.0,
+      "meanRewardTrend": 0.0,
+      "meanFinalFiringRateHz": 0.92,
+      "meanWeightDelta": 0.0,
+      "meanPathLength": 1.7500000000001137
+    },
+    "runs": [
+      {
+        "index": 1,
+        "seed": 3000017,
+        "wallTimeMs": 207,
+        "simulatedToWallRatio": 4.833227082891294,
+        "totalRewards": 0,
+        "evaluationRewards": 0,
+        "firstHalfRewards": 0,
+        "secondHalfRewards": 0,
+        "rewardTrend": 0,
+        "pathLength": 1.7500000000001137,
+        "finalFiringRateHz": 0.92,
+        "initialAverageWeight": 0.6224929239507793,
+        "finalAverageWeight": 0.6224929239507793,
+        "averageWeightDelta": 0.0
+      }
+    ]
+  }
+}

@@ -1,0 +1,128 @@
+# HIPOTEZA: zmniejszenie sredniej wagi pelnej projekcji Layer1->Layer2 z 6.0 do 0.6
+# oddzieli odpowiedz sensoryczna L1 od masowych burstow L2 i ujawni, czy baseline jest
+# zdominowany przez przejsciowe wzmocnienie feed-forward.
+# MECHANIZM MATEMATYCZNY: dolny punkt staly ma separatrix w poblizu v=-50 mV, czyli
+# ok. 20 mV ponad spoczynkiem. Przy wadze 0.6 potrzeba srednio ok. 20/0.6 = 34
+# niemal synchronicznych spike'ow L1, aby jeden neuron L2 opuscil basen spoczynku.
+# Lokalne E/I, prady vision, Layer2->Layer3 i DA-STDP pozostaja jak w baseline;
+# zmienia sie tylko gain L1->L2. Rozklad N(0.6, 0.2^2) zachowuje CV=1/3 baseline.
+# ROZNICA WZGLEDEM BASELINE: mean/std L1->L2: 6/2 -> 0.6/0.2 (mnoznik 0.1).
+# OCZEKIWANY WYNIK: L1 nadal strzela od vision, ale L2/L3 propaguje tylko silnie
+# skorelowane zdarzenia; firing globalny i droga spadaja, bez trwalej saturacji.
+# METRYKI: finalFiringRateHz, pathLength, evaluationRewards, rewardTrend,
+# averageWeightDelta; docelowo takze rate L1/L2/L3 x RS/FS, max A_t i m_L1->L2.
+# KRYTERIUM ODRZUCENIA: odrzucic jako zbyt slaby wariant, jesli finalFiringRateHz
+# <0.1 Hz lub pathLength=0 w ponad polowie seedow; odrzucic hipoteze stabilizacji,
+# jesli mimo skali 0.1 firing >50 Hz albo wystepuja populacyjne bursty >50% neuronow.
+
+neuron_types:
+  RS:
+    a: 0.02
+    b: 0.2
+    c: -65.0
+    d: 8.0
+    v0: -70.0
+    u0: -14.0
+  FS:
+    a: 0.1
+    b: 0.2
+    c: -65.0
+    d: 2.0
+    v0: -70.0
+    u0: -14.0
+
+groups:
+  - name: Cortex
+    subgroups:
+      - name: Layer1
+        neurons:
+          - type: RS
+            count: 80
+          - type: FS
+            count: 20
+      - name: Layer2
+        neurons:
+          - type: RS
+            count: 80
+          - type: FS
+            count: 20
+      - name: Layer3
+        neurons:
+          - type: RS
+            count: 80
+          - type: FS
+            count: 20
+
+inputs:
+  - name: VisionFront
+    sensor_type: GAUSSIAN_VISION
+    target_group: Cortex.Layer1
+    target_type: RS
+    params:
+      fov: 120
+      range: 500
+      overlap_factor: 1.5
+      max_current: 10.0
+
+outputs:
+  - name: MotorControl
+    output_type: POPULATION_DRIVE
+    source_group: Cortex.Layer3
+    source_type: RS
+    params:
+      speed_per_spike: 0.1
+      turn_factor: 0.1
+
+connections:
+  - from: Cortex.[0]
+    to: Cortex.[0]
+    from_type: RS
+    to_type: all
+    exclude_self: false
+    weight:
+      uniform:
+        min: 1.0
+        max: 2.0
+    rule:
+      type: probabilistic
+      probability: 0.1
+      allow_autapses: true
+
+  - from: Cortex.[0]
+    to: Cortex.[0]
+    from_type: FS
+    to_type: RS
+    exclude_self: false
+    weight:
+      fixed: -2.0
+    rule:
+      type: fixed_out_degree
+      count: 15
+      allow_autapses: false
+
+  - from: Cortex.Layer1
+    to: Cortex.Layer2
+    from_type: RS
+    to_type: all
+    exclude_self: false
+    weight:
+      normal:
+        mean: 0.6
+        std: 0.2
+    rule:
+      type: all_to_all
+      allow_autapses: false
+
+  - from: Cortex.Layer2
+    to: Cortex.Layer3
+    from_type: RS
+    to_type: all
+    exclude_self: false
+    weight:
+      normal:
+        mean: 3.0
+        std: 1.0
+    rule:
+      type: probabilistic
+      probability: 0.25
+      allow_autapses: false

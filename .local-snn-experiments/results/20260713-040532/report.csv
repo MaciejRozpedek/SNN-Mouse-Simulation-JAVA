@@ -1,0 +1,3 @@
+experiment,learningEnabled,repeats,meanEvaluationRewards,rewardStandardDeviation,meanRewardTrend,meanFinalFiringRateHz,meanWeightDelta,meanPathLength,simulatedToWallRatio,deltaRewardsVsBaseline,stableRunRatio,firingStable,verdict
+poincare-002-frozen,False,16,21.1875,3.1457643480294792,-0.8125,3.785,0.0,1963.4007216733237,27.81424754659842,2.5625,1.0,True,no_learning_trend
+poincare-001-frozen,False,16,18.625,5.071160288007732,1.875,3.879375,0.0,1689.858714852279,32.01724327768906,0.0,1.0,True,reference

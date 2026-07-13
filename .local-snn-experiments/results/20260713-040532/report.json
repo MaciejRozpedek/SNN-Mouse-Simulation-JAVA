@@ -1,0 +1,34 @@
+[
+  {
+    "experiment": "poincare-002-frozen",
+    "repeats": 16,
+    "learningEnabled": false,
+    "meanEvaluationRewards": 21.1875,
+    "rewardStandardDeviation": 3.1457643480294792,
+    "meanRewardTrend": -0.8125,
+    "meanFinalFiringRateHz": 3.785,
+    "meanWeightDelta": 0.0,
+    "meanPathLength": 1963.4007216733237,
+    "simulatedToWallRatio": 27.81424754659842,
+    "stableRunRatio": 1.0,
+    "firingStable": true,
+    "deltaRewardsVsBaseline": 2.5625,
+    "verdict": "no_learning_trend"
+  },
+  {
+    "experiment": "poincare-001-frozen",
+    "repeats": 16,
+    "learningEnabled": false,
+    "meanEvaluationRewards": 18.625,
+    "rewardStandardDeviation": 5.071160288007732,
+    "meanRewardTrend": 1.875,
+    "meanFinalFiringRateHz": 3.879375,
+    "meanWeightDelta": 0.0,
+    "meanPathLength": 1689.858714852279,
+    "simulatedToWallRatio": 32.01724327768906,
+    "stableRunRatio": 1.0,
+    "firingStable": true,
+    "deltaRewardsVsBaseline": 0.0,
+    "verdict": "reference"
+  }
+]

@@ -1,0 +1,37 @@
+{
+  "parameters": {
+    "durationMs": 2000.0,
+    "stepMs": 1.0,
+    "burnInMs": 200.0,
+    "repeats": 1,
+    "baseSeed": 41
+  },
+  "summary": {
+    "wallTimeMs": 679,
+    "simulatedToWallRatio": 2.945201434843235,
+    "meanEvaluationRewards": 0.0,
+    "rewardStandardDeviation": 0.0,
+    "meanRewardTrend": 0.0,
+    "meanFinalFiringRateHz": 9.28,
+    "meanWeightDelta": 0.0,
+    "meanPathLength": 52.79999999999893
+  },
+  "runs": [
+    {
+      "index": 1,
+      "seed": 41,
+      "wallTimeMs": 562,
+      "simulatedToWallRatio": 3.558387715876263,
+      "totalRewards": 0,
+      "evaluationRewards": 0,
+      "firstHalfRewards": 0,
+      "secondHalfRewards": 0,
+      "rewardTrend": 0,
+      "pathLength": 52.79999999999893,
+      "finalFiringRateHz": 9.28,
+      "initialAverageWeight": 4.1962872157015925,
+      "finalAverageWeight": 4.1962872157015925,
+      "averageWeightDelta": 0.0
+    }
+  ]
+}

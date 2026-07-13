@@ -1,0 +1,50 @@
+[
+  {
+    "experiment": "smoke-baseline",
+    "repeats": 1,
+    "learningEnabled": true,
+    "meanEvaluationRewards": 0.0,
+    "rewardStandardDeviation": 0.0,
+    "meanRewardTrend": 0.0,
+    "meanFinalFiringRateHz": 7.51,
+    "meanWeightDelta": 0.0,
+    "meanPathLength": 55.19999999999952,
+    "simulatedToWallRatio": 7.098174136666825,
+    "stableRunRatio": 1.0,
+    "firingStable": true,
+    "deltaRewardsVsBaseline": 0.0,
+    "verdict": "reference"
+  },
+  {
+    "experiment": "smoke-modified-current",
+    "repeats": 1,
+    "learningEnabled": true,
+    "meanEvaluationRewards": 0.0,
+    "rewardStandardDeviation": 0.0,
+    "meanRewardTrend": 0.0,
+    "meanFinalFiringRateHz": 9.28,
+    "meanWeightDelta": 0.0,
+    "meanPathLength": 52.79999999999893,
+    "simulatedToWallRatio": 7.471186435612754,
+    "stableRunRatio": 1.0,
+    "firingStable": true,
+    "deltaRewardsVsBaseline": 0.0,
+    "verdict": "insufficient_repeats"
+  },
+  {
+    "experiment": "smoke-without-learning",
+    "repeats": 1,
+    "learningEnabled": false,
+    "meanEvaluationRewards": 0.0,
+    "rewardStandardDeviation": 0.0,
+    "meanRewardTrend": 0.0,
+    "meanFinalFiringRateHz": 7.51,
+    "meanWeightDelta": 0.0,
+    "meanPathLength": 55.19999999999952,
+    "simulatedToWallRatio": 4.2264212186632,
+    "stableRunRatio": 1.0,
+    "firingStable": true,
+    "deltaRewardsVsBaseline": 0.0,
+    "verdict": "insufficient_repeats"
+  }
+]

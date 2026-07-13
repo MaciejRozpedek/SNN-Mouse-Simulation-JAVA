@@ -1,0 +1,31 @@
+base_config: ../src/main/resources/config/SNNConfig.yaml
+jar: ../target/snn-mouse-simulation-0.0.1-SNAPSHOT.jar
+baseline_experiment: smoke-baseline
+
+settings:
+  duration_ms: 2000
+  step_ms: 1
+  burn_in_ms: 200
+  repeats: 1
+  base_seed: 41
+  port: 18080
+  startup_timeout_seconds: 30
+  benchmark_timeout_seconds: 60
+  minimum_repeats: 10
+  minimum_stable_run_ratio: 0.8
+  firing_rate_min_hz: 0.1
+  firing_rate_max_hz: 50.0
+
+experiments:
+  - name: smoke-baseline
+    overrides: []
+
+  - name: smoke-modified-current
+    overrides:
+      - path: inputs[0].params.max_current
+        value: 10.5
+
+  - name: smoke-without-learning
+    benchmark_settings:
+      learning_enabled: false
+    overrides: []

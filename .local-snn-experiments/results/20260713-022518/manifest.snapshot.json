@@ -1,0 +1,24 @@
+{
+  "base_config": "../../src/main/resources/config/SNNConfig.yaml",
+  "jar": "../snn-mouse-simulation-0.0.1-SNAPSHOT.jar",
+  "settings": {
+    "duration_ms": 2000,
+    "repeats": 1,
+    "port": 18080,
+    "sample_interval_ms": 50,
+    "startup_timeout_seconds": 30,
+    "state_timeout_seconds": 10,
+    "dopamine_jump_threshold": 1.0
+  },
+  "experiments": [
+    {
+      "name": "smoke-modified-current",
+      "overrides": [
+        {
+          "path": "inputs[0].params.max_current",
+          "value": 10.5
+        }
+      ]
+    }
+  ]
+}

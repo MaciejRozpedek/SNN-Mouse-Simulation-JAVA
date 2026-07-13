@@ -1,0 +1,62 @@
+[
+  {
+    "experiment": "poincare-002-hunger-forward",
+    "repeats": 10,
+    "meanEvaluationRewards": 4.2,
+    "rewardStandardDeviation": 1.9888578520235065,
+    "meanRewardTrend": -0.2,
+    "meanFinalFiringRateHz": 3.7053333333333334,
+    "meanWeightDelta": 0.03532822164525153,
+    "meanPathLength": 309.2399999999791,
+    "simulatedToWallRatio": 22.057552462951087,
+    "stableRunRatio": 1.0,
+    "firingStable": true,
+    "deltaRewardsVsBaseline": 1.8000000000000003,
+    "verdict": "promising"
+  },
+  {
+    "experiment": "poincare-001-topographic-actions",
+    "repeats": 10,
+    "meanEvaluationRewards": 4.0,
+    "rewardStandardDeviation": 2.0,
+    "meanRewardTrend": -0.2,
+    "meanFinalFiringRateHz": 3.8943333333333334,
+    "meanWeightDelta": 0.0366110773045528,
+    "meanPathLength": 284.2599999999861,
+    "simulatedToWallRatio": 20.230168608475132,
+    "stableRunRatio": 1.0,
+    "firingStable": true,
+    "deltaRewardsVsBaseline": 1.6,
+    "verdict": "promising"
+  },
+  {
+    "experiment": "poincare-003-arc-approach",
+    "repeats": 10,
+    "meanEvaluationRewards": 3.4,
+    "rewardStandardDeviation": 1.837873166945363,
+    "meanRewardTrend": 0.2,
+    "meanFinalFiringRateHz": 3.7983333333333333,
+    "meanWeightDelta": 0.012195852730869238,
+    "meanPathLength": 287.2249999999812,
+    "simulatedToWallRatio": 20.680710836289894,
+    "stableRunRatio": 1.0,
+    "firingStable": true,
+    "deltaRewardsVsBaseline": 1.0,
+    "verdict": "promising"
+  },
+  {
+    "experiment": "baseline",
+    "repeats": 10,
+    "meanEvaluationRewards": 2.4,
+    "rewardStandardDeviation": 2.0110804171997807,
+    "meanRewardTrend": -0.6,
+    "meanFinalFiringRateHz": 1.1843333333333335,
+    "meanWeightDelta": 0.0604478262139148,
+    "meanPathLength": 218.84000000000015,
+    "simulatedToWallRatio": 17.272169931207536,
+    "stableRunRatio": 0.9,
+    "firingStable": true,
+    "deltaRewardsVsBaseline": 0.0,
+    "verdict": "reference"
+  }
+]
