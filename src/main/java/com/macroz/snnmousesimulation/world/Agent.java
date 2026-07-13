@@ -26,6 +26,7 @@ public class Agent {
     private double y;
     @Setter
     private double angle;
+    private double timeSinceLastMealMs = 0.0;
     // SNN instance
     @JsonIgnore
     private final SnnEngine engine;
@@ -62,6 +63,8 @@ public class Agent {
     }
 
     public void update(World worldSnapshot, double deltaTime) {
+        timeSinceLastMealMs += Math.max(0.0, deltaTime);
+
         // 1. SENSORS - Get sensory inputs and convert to currents
         var registeredInputs = inputSystem.calculateFrameInputs(this, worldSnapshot, deltaTime);
         for (var input : registeredInputs) {
@@ -80,7 +83,8 @@ public class Agent {
         return diagnosticTracker.snapshot();
     }
 
-    public void applyReward(){
+    public void applyReward() {
+        timeSinceLastMealMs = 0.0;
         engine.injectDopamine(5.0);
     }
 

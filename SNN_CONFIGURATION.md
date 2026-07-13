@@ -141,6 +141,37 @@ inputs:
 *   `target_type` (`<string>`): The type of neurons within the target group that will receive the input (can be a specific type or "all").
 *   `params`: A map of input-specific parameters (e.g. "fov", "range", "overlap_factor", "max_current" for GAUSSIAN_VISION).
 
+### Built-in input strategies
+
+#### `GAUSSIAN_VISION`
+
+Produces angle-selective currents from visible food. Parameters: `fov`, `range`,
+`overlap_factor`, and `max_current`.
+
+#### `TONIC_NOISE`
+
+Provides spontaneous background activity independently of the world state.
+
+```yaml
+params:
+  base_current: 2.0
+  noise_std: 0.5
+  seed: 123 # optional, useful for reproducible experiments
+```
+
+#### `HUNGER_DRIVE`
+
+Starts with zero current. After the agent has not eaten for
+`activation_delay_ms`, the current increases linearly and reaches `max_current`
+after `ramp_duration_ms`. Eating resets the timer and current.
+
+```yaml
+params:
+  activation_delay_ms: 5000
+  ramp_duration_ms: 20000
+  max_current: 10.0
+```
+
 ## `outputs`
 This section defines external input sources to neuron groups.
 
