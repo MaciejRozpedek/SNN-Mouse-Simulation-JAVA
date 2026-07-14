@@ -139,7 +139,10 @@ inputs:
 *   `sensor_type` (`<string>`): The type of sensor providing the input (e.g. "GAUSSIAN_VISION").
 *   `target_group` (`<string>`): The name of the neuron group receiving the input.
 *   `target_type` (`<string>`): The type of neurons within the target group that will receive the input (can be a specific type or "all").
-*   `params`: A map of input-specific parameters (e.g. "fov", "range", "overlap_factor", "max_current" for GAUSSIAN_VISION).
+*   `params`: A map of input-specific parameters.
+
+Concrete input strategies and their parameters are documented in
+[`SNN_CONFIGURATION_INPUTS.md`](SNN_CONFIGURATION_INPUTS.md).
 
 ## `outputs`
 This section defines external input sources to neuron groups.

@@ -1,6 +1,7 @@
 package com.macroz.snnmousesimulation.core.input.concrete;
 
 import com.macroz.snnmousesimulation.core.input.InputStrategy;
+import com.macroz.snnmousesimulation.utility.ConfigParameterReader;
 import com.macroz.snnmousesimulation.world.Agent;
 import com.macroz.snnmousesimulation.world.Food;
 import com.macroz.snnmousesimulation.world.World;
@@ -34,10 +35,10 @@ public class GaussianVisionStrategy implements InputStrategy {
 
     public static GaussianVisionStrategy create(Map<String, Object> params) {
         return new GaussianVisionStrategy(
-                ((Number) params.getOrDefault("fov", 120)).doubleValue(),
-                ((Number) params.getOrDefault("range", 200)).doubleValue(),
-                ((Number) params.getOrDefault("overlap_factor", 1.5)).doubleValue(),
-                ((Number) params.getOrDefault("max_current", 10)).doubleValue()
+                ConfigParameterReader.getDouble(params, "fov", 120.0),
+                ConfigParameterReader.getDouble(params, "range", 200.0),
+                ConfigParameterReader.getDouble(params, "overlap_factor", 1.5),
+                ConfigParameterReader.getDouble(params, "max_current", 10.0)
         );
     }
 
