@@ -38,8 +38,7 @@ public class GaussianVisionStrategy implements InputStrategy {
                 ConfigParameterReader.getDouble(params, "fov", 120.0),
                 ConfigParameterReader.getDouble(params, "range", 200.0),
                 ConfigParameterReader.getDouble(params, "overlap_factor", 1.5),
-                ConfigParameterReader.getDouble(params, "max_current", 10.0)
-        );
+                ConfigParameterReader.getDouble(params, "max_current", 10.0));
     }
 
     @Override

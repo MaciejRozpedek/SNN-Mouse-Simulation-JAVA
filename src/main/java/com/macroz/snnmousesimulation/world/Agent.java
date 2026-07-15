@@ -82,7 +82,7 @@ public class Agent {
         return diagnosticTracker.snapshot();
     }
 
-    public void applyReward(){
+    public void applyReward() {
         engine.injectDopamine(5.0);
     }
 

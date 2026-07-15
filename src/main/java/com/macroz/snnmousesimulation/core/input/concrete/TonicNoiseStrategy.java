@@ -33,8 +33,7 @@ public final class TonicNoiseStrategy implements InputStrategy {
         return new TonicNoiseStrategy(
                 ConfigParameterReader.getDouble(params, "base_current", 0.0),
                 ConfigParameterReader.getDouble(params, "noise_std", 0.0),
-                ConfigParameterReader.getOptionalLong(params, "seed")
-        );
+                ConfigParameterReader.getOptionalLong(params, "seed"));
     }
 
     @Override
