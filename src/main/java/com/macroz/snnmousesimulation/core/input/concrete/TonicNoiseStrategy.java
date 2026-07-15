@@ -1,9 +1,8 @@
 package com.macroz.snnmousesimulation.core.input.concrete;
 
+import com.macroz.snnmousesimulation.core.input.InputFrame;
 import com.macroz.snnmousesimulation.core.input.InputStrategy;
 import com.macroz.snnmousesimulation.utility.ConfigParameterReader;
-import com.macroz.snnmousesimulation.world.Agent;
-import com.macroz.snnmousesimulation.world.World;
 
 import java.util.Map;
 import java.util.Random;
@@ -39,7 +38,7 @@ public final class TonicNoiseStrategy implements InputStrategy {
     }
 
     @Override
-    public double[] calculateCurrents(Agent agent, World worldSnapshot, double deltaTime, int targetNeuronCount) {
+    public double[] calculateCurrents(InputFrame frame, int targetNeuronCount) {
         if (targetNeuronCount <= 0) {
             return new double[0];
         }

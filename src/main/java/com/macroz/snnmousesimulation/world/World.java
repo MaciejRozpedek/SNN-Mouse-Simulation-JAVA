@@ -1,7 +1,8 @@
 package com.macroz.snnmousesimulation.world;
 
-
 import com.macroz.snnmousesimulation.core.SnnNetworkData;
+import com.macroz.snnmousesimulation.core.input.InputFrame;
+
 import lombok.Getter;
 
 import java.util.ArrayList;
@@ -18,6 +19,7 @@ public class World {
     private final Agent agent;
     @Getter
     private final List<Food> food;
+    private final WorldView worldView;
 
     private final Random random = new Random();
 
@@ -27,6 +29,7 @@ public class World {
         this.width = width;
         this.height = height;
         this.food = new ArrayList<>();
+        this.worldView = WorldView.from(this);
         initializeFood(numberOfFood);
         this.agent = new Agent(width / 2, height / 2, snnNetworkData);
     }
@@ -47,7 +50,14 @@ public class World {
             }
         }
 
-        agent.update(this, deltaTime);
+        InputFrame inputFrame = new InputFrame(
+                AgentView.from(agent),
+                worldView,
+                simulationTimeMs,
+                deltaTime
+        );
+
+        agent.update(inputFrame);
         handleBoundaries();
 
         if (closestFood != null) {

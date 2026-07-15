@@ -1,10 +1,10 @@
 package com.macroz.snnmousesimulation.core.input.concrete;
 
+import com.macroz.snnmousesimulation.core.input.InputFrame;
 import com.macroz.snnmousesimulation.core.input.InputStrategy;
 import com.macroz.snnmousesimulation.utility.ConfigParameterReader;
-import com.macroz.snnmousesimulation.world.Agent;
+import com.macroz.snnmousesimulation.world.AgentView;
 import com.macroz.snnmousesimulation.world.Food;
-import com.macroz.snnmousesimulation.world.World;
 
 import java.util.Map;
 
@@ -43,23 +43,24 @@ public class GaussianVisionStrategy implements InputStrategy {
     }
 
     @Override
-    public double[] calculateCurrents(Agent agent, World worldSnapshot, double deltaTime, int targetNeuronCount) {
+    public double[] calculateCurrents(InputFrame frame, int targetNeuronCount) {
         if (targetNeuronCount <= 0) return new double[0];
 
         double[] currents = new double[targetNeuronCount];
+        AgentView agent = frame.agent();
 
         double sigma = (fovRadians / targetNeuronCount) * OVERLAP_FACTOR;
         double sigmaSq2 = 2 * sigma * sigma;
 
-        for (Food food : worldSnapshot.getFood()) {
-            double dx = food.x() - agent.getX();
-            double dy = food.y() - agent.getY();
+        for (Food food : frame.world().food()) {
+            double dx = food.x() - agent.x();
+            double dy = food.y() - agent.y();
             double distSq = dx * dx + dy * dy;
 
             if (distSq > maxRangeSq) continue;
 
             double globalAngleToFood = Math.atan2(dy, dx);
-            double relativeAngle = normalizeAngle(globalAngleToFood - agent.getAngle());
+            double relativeAngle = normalizeAngle(globalAngleToFood - agent.angle());
 
             if (Math.abs(relativeAngle) > halfFov) continue;
 

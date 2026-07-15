@@ -6,6 +6,7 @@ import com.macroz.snnmousesimulation.core.SnnDiagnosticTracker;
 import com.macroz.snnmousesimulation.core.SnnEngine;
 import com.macroz.snnmousesimulation.core.SnnNetworkData;
 import com.macroz.snnmousesimulation.core.input.InputConfig;
+import com.macroz.snnmousesimulation.core.input.InputFrame;
 import com.macroz.snnmousesimulation.core.input.InputStrategy;
 import com.macroz.snnmousesimulation.core.input.InputStrategyFactory;
 import com.macroz.snnmousesimulation.core.input.InputSystem;
@@ -13,6 +14,7 @@ import com.macroz.snnmousesimulation.core.output.OutputConfig;
 import com.macroz.snnmousesimulation.core.output.OutputStrategy;
 import com.macroz.snnmousesimulation.core.output.OutputStrategyFactory;
 import com.macroz.snnmousesimulation.core.output.OutputSystem;
+
 import lombok.Getter;
 import lombok.Setter;
 
@@ -61,19 +63,19 @@ public class Agent {
         }
     }
 
-    public void update(World worldSnapshot, double deltaTime) {
+    public void update(InputFrame frame) {
         // 1. SENSORS - Get sensory inputs and convert to currents
-        var registeredInputs = inputSystem.calculateFrameInputs(this, worldSnapshot, deltaTime);
+        var registeredInputs = inputSystem.calculateFrameInputs(frame);
         for (var input : registeredInputs) {
             engine.addInputCurrent(input.indices(), input.currents());
         }
 
         // 2. BRAIN PROCESS - Run one time step
-        List<Integer> firedIndices = engine.step(deltaTime);
-        diagnosticTracker.registerStep(deltaTime, firedIndices);
+        List<Integer> firedIndices = engine.step(frame.deltaTimeMs());
+        diagnosticTracker.registerStep(frame.deltaTimeMs(), firedIndices);
 
         // 3. RESPONSE - Interpret outputs and move
-        outputSystem.processOutputs(this, firedIndices, deltaTime);
+        outputSystem.processOutputs(this, firedIndices, frame.deltaTimeMs());
     }
 
     public SnnDiagnosticState getSnnDiagnostics() {

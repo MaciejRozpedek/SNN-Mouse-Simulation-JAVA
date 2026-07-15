@@ -1,8 +1,5 @@
 package com.macroz.snnmousesimulation.core.input;
 
-import com.macroz.snnmousesimulation.world.Agent;
-import com.macroz.snnmousesimulation.world.World;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,10 +13,10 @@ public class InputSystem {
         inputs.add(new InputBinding(targetIndices, strategy));
     }
 
-    public List<RegisteredInput> calculateFrameInputs(Agent agent, World worldSnapshot, double deltaTime) {
+    public List<RegisteredInput> calculateFrameInputs(InputFrame frame) {
         List<RegisteredInput> inputs = new ArrayList<>();
         for (InputBinding sb : this.inputs) {
-            double[] currents = sb.strategy.calculateCurrents(agent, worldSnapshot, deltaTime, sb.targetIndices.length);
+            double[] currents = sb.strategy.calculateCurrents(frame, sb.targetIndices.length);
             inputs.add(new RegisteredInput(sb.targetIndices, currents));
         }
         return inputs;
