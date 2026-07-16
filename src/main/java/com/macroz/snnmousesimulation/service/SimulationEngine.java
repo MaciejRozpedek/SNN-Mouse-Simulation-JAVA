@@ -15,6 +15,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public class SimulationEngine {
     private final SnnConfigProvider snnConfigProvider;
     private static final long TICK_RATE_MS = 1;
+    private static final int SSE_BROADCAST_FPS = 60;
+    private static final long SSE_BROADCAST_INTERVAL_NS = 1_000_000_000L / SSE_BROADCAST_FPS;
 
     private volatile double speedMultiplier = 1.0;
     private volatile boolean running = false;
@@ -52,14 +54,14 @@ public class SimulationEngine {
     }
 
     private void runLoop() {
-        long expectedTime = System.currentTimeMillis();
+        long expectedTime = System.nanoTime();
 
         while (running) {
             tick(TICK_RATE_MS);
 
-            long targetInterval = currentTickIntervalMs();
+            long targetInterval = currentTickIntervalNanos();
             expectedTime += targetInterval;
-            sleepUntil(expectedTime);
+            sleepUntilNanos(expectedTime);
         }
     }
 
@@ -75,12 +77,11 @@ public class SimulationEngine {
     }
 
     private void sseBroadcastLoop() {
-        long expectedTime = System.currentTimeMillis();
+        long expectedTime = System.nanoTime();
 
         while (running) {
-            long targetInterval = currentTickIntervalMs();
-            expectedTime += targetInterval;
-            sleepUntil(expectedTime);
+            expectedTime += SSE_BROADCAST_INTERVAL_NS;
+            sleepUntilNanos(expectedTime);
             if (!running) break;
 
             try {
@@ -93,19 +94,25 @@ public class SimulationEngine {
                 System.err.println("SSE broadcast failed: " + e.getMessage());
                 e.printStackTrace();
             }
+
+            if (System.nanoTime() - expectedTime >= SSE_BROADCAST_INTERVAL_NS) {
+                expectedTime = System.nanoTime();
+            }
         }
     }
 
-    private long currentTickIntervalMs() {
-        return (long) (TICK_RATE_MS / speedMultiplier);
+    private long currentTickIntervalNanos() {
+        return (long) (TICK_RATE_MS * 1_000_000L / speedMultiplier);
     }
 
-    private void sleepUntil(long expectedTime) {
-        long sleepTime = expectedTime - System.currentTimeMillis();
+    private void sleepUntilNanos(long expectedTime) {
+        long sleepTime = expectedTime - System.nanoTime();
         if (sleepTime <= 0) return;
 
+        long millis = sleepTime / 1_000_000L;
+        int nanos = (int) (sleepTime % 1_000_000L);
         try {
-            Thread.sleep(sleepTime);
+            Thread.sleep(millis, nanos);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             running = false;

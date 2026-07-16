@@ -20,12 +20,18 @@
  */
 
 /**
+ * @typedef {Object} SpikeSample
+ * @property {number} simulationTimeMs
+ * @property {number[]} neuronIndices
+ */
+
+/**
  * @typedef {Object} SnnDiagnosticState
  * @property {number} dopamineLevel
  * @property {number} dopamineBaseLevel
  * @property {number} meanFiringRateHz
- * @property {number} totalSpikesInLastStep
- * @property {number[]} firedNeuronIndices
+ * @property {number} totalSpikesSinceLastSnapshot
+ * @property {SpikeSample[]} spikeSamples
  * @property {number} averageWeight
  * @property {number} minWeight
  * @property {number} maxWeight
@@ -46,7 +52,7 @@ const elSimTime = document.getElementById('simTime');
 const elDopamine = document.getElementById('dopamineVal');
 const elDopamineBase = document.getElementById('dopamineBaseVal');
 const elMeanHz = document.getElementById('meanHz');
-const elSpikesLastStep = document.getElementById('spikesLastStep');
+const elSpikesSinceLastSnapshot = document.getElementById('spikesSinceLastSnapshot');
 const elAvgWeight = document.getElementById('avgWeight');
 const elWeightRange = document.getElementById('weightRange');
 
@@ -347,14 +353,15 @@ function updateSnnTelemetry(world) {
     elDopamine.innerText = diag.dopamineLevel.toFixed(4);
     elDopamineBase.innerText = diag.dopamineBaseLevel.toFixed(4);
     elMeanHz.innerText = diag.meanFiringRateHz.toFixed(2) + ' Hz';
-    elSpikesLastStep.innerText = String(diag.totalSpikesInLastStep);
+    elSpikesSinceLastSnapshot.innerText = String(diag.totalSpikesSinceLastSnapshot);
     elAvgWeight.innerText = diag.averageWeight.toFixed(2);
     elWeightRange.innerText = `${diag.minWeight.toFixed(2)} / ${diag.maxWeight.toFixed(2)}`;
 
 }
 
 /**
- * Adds one simulation step to the spike activity history. This is intentionally called
+ * Adds all simulation steps received in one SSE frame to the spike activity history.
+ * This is intentionally called
  * only from the SSE handler, never from requestAnimationFrame.
  *
  * @param {SimulationState} world
@@ -371,13 +378,18 @@ function bufferSpikes(world) {
     const potentialsCount = Array.isArray(diag.neuronPotentials)
         ? diag.neuronPotentials.length
         : 0;
-    const rawFiredIndices = Array.isArray(diag.firedNeuronIndices)
-        ? diag.firedNeuronIndices
+    const spikeSamples = Array.isArray(diag.spikeSamples)
+        ? diag.spikeSamples
         : [];
     let highestFiredIndex = -1;
-    for (const index of rawFiredIndices) {
-        if (Number.isInteger(index) && index >= 0) {
-            highestFiredIndex = Math.max(highestFiredIndex, index);
+    for (const sample of spikeSamples) {
+        const neuronIndices = Array.isArray(sample?.neuronIndices)
+            ? sample.neuronIndices
+            : [];
+        for (const index of neuronIndices) {
+            if (Number.isInteger(index) && index >= 0) {
+                highestFiredIndex = Math.max(highestFiredIndex, index);
+            }
         }
     }
 
@@ -391,19 +403,29 @@ function bufferSpikes(world) {
         resizeSpikeCanvas();
     }
 
-    const binId = Math.floor(timeMs / SPIKE_ACTIVITY_BIN_MS);
-    if (latestSpikeBin !== null && binId < latestSpikeBin) {
+    const latestBinId = Math.floor(timeMs / SPIKE_ACTIVITY_BIN_MS);
+    if (latestSpikeBin !== null && latestBinId < latestSpikeBin) {
         resetSpikeHistory(false);
     }
 
-    if (rawFiredIndices.length > 0) {
+    const oldestVisibleBin = latestBinId - SPIKE_ACTIVITY_BIN_COUNT + 1;
+    for (const sample of spikeSamples) {
+        const sampleTimeMs = Number(sample?.simulationTimeMs);
+        const neuronIndices = Array.isArray(sample?.neuronIndices)
+            ? sample.neuronIndices
+            : [];
+        if (!Number.isFinite(sampleTimeMs) || neuronIndices.length === 0) continue;
+
+        const binId = Math.floor(sampleTimeMs / SPIKE_ACTIVITY_BIN_MS);
+        if (binId < oldestVisibleBin || binId > latestBinId) continue;
+
         let occupiedNeurons = spikeBins.get(binId);
         if (!occupiedNeurons) {
             occupiedNeurons = new Uint8Array(spikeActivityNeuronCount);
             spikeBins.set(binId, occupiedNeurons);
         }
 
-        for (const index of rawFiredIndices) {
+        for (const index of neuronIndices) {
             if (Number.isInteger(index) && index >= 0 && index < spikeActivityNeuronCount) {
                 occupiedNeurons[index] = 1;
             }
@@ -411,9 +433,8 @@ function bufferSpikes(world) {
     }
 
     lastSpikeTimeMs = timeMs;
-    latestSpikeBin = binId;
+    latestSpikeBin = latestBinId;
 
-    const oldestVisibleBin = binId - SPIKE_ACTIVITY_BIN_COUNT + 1;
     for (const existingBin of spikeBins.keys()) {
         if (existingBin >= oldestVisibleBin) break;
         spikeBins.delete(existingBin);

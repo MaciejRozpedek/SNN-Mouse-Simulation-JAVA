@@ -6,11 +6,13 @@ public record SnnDiagnosticState(
         double dopamineLevel,
         double dopamineBaseLevel,
         double meanFiringRateHz,
-        int totalSpikesInLastStep,
-        List<Integer> firedNeuronIndices,
+        int totalSpikesSinceLastSnapshot,
+        List<SpikeSample> spikeSamples,
         double averageWeight,
         double minWeight,
         double maxWeight,
         float[] neuronPotentials
 ) {
+    public record SpikeSample(double simulationTimeMs, List<Integer> neuronIndices) {
+    }
 }

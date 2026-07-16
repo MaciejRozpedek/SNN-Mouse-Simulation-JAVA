@@ -11,9 +11,10 @@ public class SnnDiagnosticTracker {
 
     private final SnnEngine engine;
     private final ArrayDeque<SpikeRecord> spikeHistory = new ArrayDeque<>();
+    private final ArrayDeque<SnnDiagnosticState.SpikeSample> pendingSpikeSamples = new ArrayDeque<>();
     private double simulatedTimeMs = 0.0;
     private double lastDetailedExportTimeMs = -DETAILED_EXPORT_INTERVAL_MS;
-    private List<Integer> lastFiredNeuronIndices = List.of();
+    private int pendingSpikeCount = 0;
 
     private record SpikeRecord(double timestampMs, int spikeCount) {
     }
@@ -27,10 +28,14 @@ public class SnnDiagnosticTracker {
 
     public void registerStep(double deltaTimeMs, List<Integer> firedNeuronIndices) {
         simulatedTimeMs += deltaTimeMs;
-        lastFiredNeuronIndices = List.copyOf(firedNeuronIndices);
+        List<Integer> firedIndicesSnapshot = List.copyOf(firedNeuronIndices);
 
-        if (!firedNeuronIndices.isEmpty()) {
-            spikeHistory.addLast(new SpikeRecord(simulatedTimeMs, firedNeuronIndices.size()));
+        if (!firedIndicesSnapshot.isEmpty()) {
+            spikeHistory.addLast(new SpikeRecord(simulatedTimeMs, firedIndicesSnapshot.size()));
+            pendingSpikeSamples.addLast(
+                    new SnnDiagnosticState.SpikeSample(simulatedTimeMs, firedIndicesSnapshot)
+            );
+            pendingSpikeCount += firedIndicesSnapshot.size();
         }
 
         double cutoff = simulatedTimeMs - WINDOW_DURATION_MS;
@@ -54,12 +59,17 @@ public class SnnDiagnosticTracker {
                 : 0.0;
 
         WeightStats weightStats = calculateWeightStats();
+        List<SnnDiagnosticState.SpikeSample> spikeSamples = List.copyOf(pendingSpikeSamples);
+        pendingSpikeSamples.clear();
+        int totalSpikesSinceLastSnapshot = pendingSpikeCount;
+        pendingSpikeCount = 0;
+
         return new SnnDiagnosticState(
                 engine.getDopamineLevel(),
                 engine.getDopamineBaseLevel(),
                 meanFiringRateHz,
-                lastFiredNeuronIndices.size(),
-                lastFiredNeuronIndices,
+                totalSpikesSinceLastSnapshot,
+                spikeSamples,
                 weightStats.average(),
                 weightStats.min(),
                 weightStats.max(),
