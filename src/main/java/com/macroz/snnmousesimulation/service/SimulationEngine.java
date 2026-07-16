@@ -19,6 +19,7 @@ public class SimulationEngine {
     private volatile double speedMultiplier = 1.0;
     private volatile boolean running = false;
     private Thread simulationThread;
+    private Thread sseBroadcastThread;
 
     private World world;
     private final List<SseEmitter> emitters = new CopyOnWriteArrayList<>();
@@ -39,6 +40,10 @@ public class SimulationEngine {
         simulationThread = new Thread(this::runLoop, "Simulation-Loop");
         simulationThread.setDaemon(true);
         simulationThread.start();
+
+        sseBroadcastThread = new Thread(this::sseBroadcastLoop, "SSE-Broadcast-Loop");
+        sseBroadcastThread.setDaemon(true);
+        sseBroadcastThread.start();
     }
 
     public void reloadSimulation() {
@@ -52,32 +57,58 @@ public class SimulationEngine {
         while (running) {
             tick(TICK_RATE_MS);
 
-            long targetInterval = (long) (TICK_RATE_MS / speedMultiplier);
+            long targetInterval = currentTickIntervalMs();
             expectedTime += targetInterval;
-            long sleepTime = expectedTime - System.currentTimeMillis();
-
-            if (sleepTime > 0) {
-                try {
-                    Thread.sleep(sleepTime);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    running = false;
-                }
-            }
+            sleepUntil(expectedTime);
         }
     }
 
     private void tick(double deltaTime) {
         try {
-            SimulationState state;
             synchronized (this) {
                 world.update(deltaTime);
-                state = getSimulationState();
             }
-            broadcast(state);
         } catch (Exception e) {
             System.err.println("Simulation tick failed: " + e.getMessage());
             e.printStackTrace();
+        }
+    }
+
+    private void sseBroadcastLoop() {
+        long expectedTime = System.currentTimeMillis();
+
+        while (running) {
+            long targetInterval = currentTickIntervalMs();
+            expectedTime += targetInterval;
+            sleepUntil(expectedTime);
+            if (!running) break;
+
+            try {
+                SimulationState state;
+                synchronized (this) {
+                    state = getSimulationState();
+                }
+                broadcast(state);
+            } catch (Exception e) {
+                System.err.println("SSE broadcast failed: " + e.getMessage());
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private long currentTickIntervalMs() {
+        return (long) (TICK_RATE_MS / speedMultiplier);
+    }
+
+    private void sleepUntil(long expectedTime) {
+        long sleepTime = expectedTime - System.currentTimeMillis();
+        if (sleepTime <= 0) return;
+
+        try {
+            Thread.sleep(sleepTime);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            running = false;
         }
     }
 
@@ -108,19 +139,27 @@ public class SimulationEngine {
     @PreDestroy
     public void stopSimulation() {
         running = false;
-        if (simulationThread != null) {
-            try {
-                simulationThread.join(1000);
-            } catch (InterruptedException e) {
-                System.err.println("Failed to join simulation thread");
-            }
-            simulationThread = null;
-        }
+        stopThread(simulationThread, "simulation");
+        stopThread(sseBroadcastThread, "SSE broadcast");
+        simulationThread = null;
+        sseBroadcastThread = null;
 
         for (SseEmitter emitter : emitters) {
             emitter.complete();
         }
         emitters.clear();
+    }
+
+    private void stopThread(Thread thread, String threadName) {
+        if (thread == null) return;
+
+        thread.interrupt();
+        try {
+            thread.join(1000);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            System.err.println("Failed to join " + threadName + " thread");
+        }
     }
 
     private SimulationState getSimulationState() {
