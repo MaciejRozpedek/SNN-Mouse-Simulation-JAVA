@@ -53,10 +53,39 @@ const elWeightRange = document.getElementById('weightRange');
 const speedRange = document.getElementById('speedRange');
 const speedValue = document.getElementById('speedValue');
 
+const SPIKE_WINDOW_MS = 1_000;
+// Multiple spikes in the same 5 ms/neuron cell are visually indistinguishable.
+// Store one bit per cell so pathological activity cannot grow rendering work.
+const SPIKE_ACTIVITY_BIN_MS = 5;
+const SPIKE_ACTIVITY_BIN_COUNT = Math.ceil(SPIKE_WINDOW_MS / SPIKE_ACTIVITY_BIN_MS);
+const SPIKE_ACTIVITY_FRAME_INTERVAL_MS = 1_000 / 60;
+const DEFAULT_NEURON_COUNT = 16;
+const MIN_SPIKE_ACTIVITY_HEIGHT = 170;
+const MAX_SPIKE_ACTIVITY_HEIGHT = 520;
+const SPIKE_ACTIVITY_VERTICAL_PADDING = 48;
+
+/** @type {Map<number, Uint8Array>} */
+let spikeBins = new Map();
+let lastSpikeTimeMs = null;
+let latestSpikeBin = null;
+let spikeActivityNeuronCount = DEFAULT_NEURON_COUNT;
+let spikeActivityDirty = true;
+let lastSpikeActivityFrameTime = Number.NEGATIVE_INFINITY;
+const spikeActivityBitmapCanvas = document.createElement('canvas');
+const spikeActivityBitmapCtx = spikeActivityBitmapCanvas.getContext('2d');
+let spikeActivityBitmap = null;
+
 reloadBtn.addEventListener('click', () => {
-    stopSimulation()
+    stopSimulation();
+    latestWorldState = null;
+    resetSpikeHistory(true);
+    if (showSpikeActivity) drawSpikeActivity();
+
     fetch('/api/reload', { method: 'POST' })
         .then(() => {
+            latestWorldState = null;
+            resetSpikeHistory(true);
+            if (showSpikeActivity) drawSpikeActivity();
             console.log("Simulation reloaded");
         })
         .catch(err => console.error("Failed to reload:", err));
@@ -74,12 +103,17 @@ let eventSource = null;
 let animationFrameId = null;
 let isRunning = false;
 let latestWorldState = null;
-let showNetworkMap = false;
+let showSpikeActivity = false;
 
 toggleNetBtn.addEventListener('click', () => {
-    showNetworkMap = !showNetworkMap;
-    snnCanvas.style.display = showNetworkMap ? 'block' : 'none';
-    toggleNetBtn.textContent = showNetworkMap ? 'Hide Map' : 'Show Map';
+    showSpikeActivity = !showSpikeActivity;
+    snnCanvas.style.display = showSpikeActivity ? 'block' : 'none';
+    toggleNetBtn.textContent = showSpikeActivity ? 'Hide Spikes' : 'Show Spikes';
+
+    if (showSpikeActivity) {
+        spikeActivityDirty = true;
+        drawSpikeActivity();
+    }
 });
 
 function toggleSimulation() {
@@ -102,6 +136,7 @@ function startSimulation() {
         
         eventSource.addEventListener('state', (event) => {
             latestWorldState = JSON.parse(event.data);
+            bufferSpikes(latestWorldState);
         });
         
         eventSource.onerror = (err) => {
@@ -136,13 +171,22 @@ function stopSimulation() {
     }).catch(err => console.error("Failed to stop:", err));
 }
 
-function renderLoop() {
+function renderLoop(frameTime = performance.now()) {
     if (!isRunning) return;
 
     if (latestWorldState) {
         render(latestWorldState);
         updateTelemetry(latestWorldState);
         updateSnnTelemetry(latestWorldState);
+    }
+
+    if (
+        showSpikeActivity &&
+        spikeActivityDirty &&
+        frameTime - lastSpikeActivityFrameTime >= SPIKE_ACTIVITY_FRAME_INTERVAL_MS
+    ) {
+        drawSpikeActivity();
+        lastSpikeActivityFrameTime = frameTime;
     }
 
     animationFrameId = requestAnimationFrame(renderLoop);
@@ -307,51 +351,227 @@ function updateSnnTelemetry(world) {
     elAvgWeight.innerText = diag.averageWeight.toFixed(2);
     elWeightRange.innerText = `${diag.minWeight.toFixed(2)} / ${diag.maxWeight.toFixed(2)}`;
 
-    if (showNetworkMap && diag.neuronPotentials) {
-        drawNetworkActivity(diag.neuronPotentials, diag.firedNeuronIndices);
-    }
 }
 
 /**
- * @param {number[]} potentials
- * @param {number[]} firedIndices
+ * Adds one simulation step to the spike activity history. This is intentionally called
+ * only from the SSE handler, never from requestAnimationFrame.
+ *
+ * @param {SimulationState} world
  */
-function drawNetworkActivity(potentials, firedIndices) {
-    snnCtx.clearRect(0, 0, snnCanvas.width, snnCanvas.height);
+function bufferSpikes(world) {
+    const timeMs = Number(world.simulationTimeMs);
+    if (!Number.isFinite(timeMs) || !world.snnDiagnostics) return;
 
-    const count = potentials.length;
-    if (count === 0) return;
-
-    const cols = Math.ceil(Math.sqrt(count));
-    const rows = Math.ceil(count / cols);
-    const cellWidth = snnCanvas.width / cols;
-    const cellHeight = snnCanvas.height / rows;
-    const radius = Math.max(1, Math.min(cellWidth, cellHeight) * 0.38);
-    const firedSet = new Set(firedIndices || []);
-
-    for (let i = 0; i < count; i++) {
-        const col = i % cols;
-        const row = Math.floor(i / cols);
-        const x = col * cellWidth + cellWidth / 2;
-        const y = row * cellHeight + cellHeight / 2;
-        const normalizedV = Math.min(Math.max((potentials[i] + 70) / 100, 0), 1);
-
-        snnCtx.beginPath();
-        snnCtx.arc(x, y, radius, 0, Math.PI * 2);
-
-        if (firedSet.has(i)) {
-            snnCtx.fillStyle = '#ffffff';
-            snnCtx.shadowBlur = 8;
-            snnCtx.shadowColor = '#00ff41';
-        } else {
-            snnCtx.fillStyle = `rgba(0, 255, 65, ${Math.max(0.12, normalizedV)})`;
-            snnCtx.shadowBlur = 0;
-        }
-
-        snnCtx.fill();
+    if (lastSpikeTimeMs !== null && timeMs < lastSpikeTimeMs) {
+        resetSpikeHistory(false);
     }
 
-    snnCtx.shadowBlur = 0;
+    const diag = world.snnDiagnostics;
+    const potentialsCount = Array.isArray(diag.neuronPotentials)
+        ? diag.neuronPotentials.length
+        : 0;
+    const rawFiredIndices = Array.isArray(diag.firedNeuronIndices)
+        ? diag.firedNeuronIndices
+        : [];
+    let highestFiredIndex = -1;
+    for (const index of rawFiredIndices) {
+        if (Number.isInteger(index) && index >= 0) {
+            highestFiredIndex = Math.max(highestFiredIndex, index);
+        }
+    }
+
+    const nextNeuronCount = potentialsCount > 0
+        ? potentialsCount
+        : Math.max(spikeActivityNeuronCount, highestFiredIndex + 1, DEFAULT_NEURON_COUNT);
+
+    if (nextNeuronCount !== spikeActivityNeuronCount) {
+        spikeActivityNeuronCount = nextNeuronCount;
+        spikeBins.clear();
+        resizeSpikeCanvas();
+    }
+
+    const binId = Math.floor(timeMs / SPIKE_ACTIVITY_BIN_MS);
+    if (latestSpikeBin !== null && binId < latestSpikeBin) {
+        resetSpikeHistory(false);
+    }
+
+    if (rawFiredIndices.length > 0) {
+        let occupiedNeurons = spikeBins.get(binId);
+        if (!occupiedNeurons) {
+            occupiedNeurons = new Uint8Array(spikeActivityNeuronCount);
+            spikeBins.set(binId, occupiedNeurons);
+        }
+
+        for (const index of rawFiredIndices) {
+            if (Number.isInteger(index) && index >= 0 && index < spikeActivityNeuronCount) {
+                occupiedNeurons[index] = 1;
+            }
+        }
+    }
+
+    lastSpikeTimeMs = timeMs;
+    latestSpikeBin = binId;
+
+    const oldestVisibleBin = binId - SPIKE_ACTIVITY_BIN_COUNT + 1;
+    for (const existingBin of spikeBins.keys()) {
+        if (existingBin >= oldestVisibleBin) break;
+        spikeBins.delete(existingBin);
+    }
+
+    spikeActivityDirty = true;
 }
 
+/**
+ * @param {boolean} resetNeuronCount
+ */
+function resetSpikeHistory(resetNeuronCount) {
+    spikeBins.clear();
+    lastSpikeTimeMs = null;
+    latestSpikeBin = null;
+    spikeActivityDirty = true;
+
+    if (resetNeuronCount) {
+        spikeActivityNeuronCount = DEFAULT_NEURON_COUNT;
+        resizeSpikeCanvas();
+    }
+}
+
+function resizeSpikeCanvas() {
+    const desiredHeight = SPIKE_ACTIVITY_VERTICAL_PADDING + spikeActivityNeuronCount * 5;
+    snnCanvas.height = Math.min(
+        MAX_SPIKE_ACTIVITY_HEIGHT,
+        Math.max(MIN_SPIKE_ACTIVITY_HEIGHT, desiredHeight)
+    );
+    spikeActivityDirty = true;
+}
+
+function drawSpikeActivity() {
+    const width = snnCanvas.width;
+    const height = snnCanvas.height;
+    const plot = {
+        left: 50,
+        top: 12,
+        right: width - 8,
+        bottom: height - 30
+    };
+    const plotWidth = plot.right - plot.left;
+    const plotHeight = plot.bottom - plot.top;
+    snnCtx.clearRect(0, 0, width, height);
+    snnCtx.fillStyle = '#0b0f19';
+    snnCtx.fillRect(0, 0, width, height);
+    snnCtx.font = "9px 'Roboto Mono', monospace";
+    snnCtx.lineWidth = 1;
+
+    // Time grid: newest samples are at x = plot.right.
+    snnCtx.textAlign = 'center';
+    snnCtx.textBaseline = 'top';
+    for (let tick = 0; tick <= 4; tick++) {
+        const x = plot.left + (tick / 4) * plotWidth;
+        const ageMs = SPIKE_WINDOW_MS - (tick / 4) * SPIKE_WINDOW_MS;
+
+        snnCtx.strokeStyle = tick === 4
+            ? 'rgba(0, 255, 255, 0.55)'
+            : 'rgba(0, 255, 255, 0.12)';
+        snnCtx.beginPath();
+        snnCtx.moveTo(Math.round(x) + 0.5, plot.top);
+        snnCtx.lineTo(Math.round(x) + 0.5, plot.bottom);
+        snnCtx.stroke();
+
+        snnCtx.fillStyle = '#94a3b8';
+        snnCtx.fillText(ageMs === 0 ? '0' : `-${Math.round(ageMs)}`, x, plot.bottom + 5);
+    }
+
+    // A small set of horizontal guides keeps dense spike activity readable.
+    const labelStep = Math.max(1, Math.ceil(spikeActivityNeuronCount / 6));
+    snnCtx.textAlign = 'right';
+    snnCtx.textBaseline = 'middle';
+    for (let index = 0; index < spikeActivityNeuronCount; index += labelStep) {
+        const y = neuronY(index, plot.top, plotHeight);
+        snnCtx.strokeStyle = 'rgba(0, 255, 65, 0.10)';
+        snnCtx.beginPath();
+        snnCtx.moveTo(plot.left, Math.round(y) + 0.5);
+        snnCtx.lineTo(plot.right, Math.round(y) + 0.5);
+        snnCtx.stroke();
+
+        snnCtx.fillStyle = '#94a3b8';
+        snnCtx.fillText(`N${index}`, plot.left - 5, y);
+    }
+
+    const lastIndex = spikeActivityNeuronCount - 1;
+    if (lastIndex >= 0 && lastIndex % labelStep !== 0) {
+        const y = neuronY(lastIndex, plot.top, plotHeight);
+        snnCtx.fillStyle = '#94a3b8';
+        snnCtx.fillText(`N${lastIndex}`, plot.left - 5, y);
+    }
+
+    snnCtx.save();
+    snnCtx.translate(8, plot.top + plotHeight / 2);
+    snnCtx.rotate(-Math.PI / 2);
+    snnCtx.fillStyle = '#94a3b8';
+    snnCtx.textAlign = 'center';
+    snnCtx.textBaseline = 'top';
+    snnCtx.fillText('NEURON', 0, 0);
+    snnCtx.restore();
+
+    snnCtx.save();
+    snnCtx.beginPath();
+    snnCtx.rect(plot.left, plot.top, plotWidth, plotHeight);
+    snnCtx.clip();
+    drawSpikeActivityBitmap(plot.left, plot.top, plotWidth, plotHeight);
+    snnCtx.restore();
+
+    snnCtx.fillStyle = '#94a3b8';
+    snnCtx.textAlign = 'right';
+    snnCtx.textBaseline = 'bottom';
+    snnCtx.fillText('TIME [ms]', plot.right, height - 2);
+    spikeActivityDirty = false;
+}
+
+function drawSpikeActivityBitmap(x, y, width, height) {
+    const bitmapHeight = Math.max(1, spikeActivityNeuronCount);
+    if (
+        spikeActivityBitmapCanvas.width !== SPIKE_ACTIVITY_BIN_COUNT ||
+        spikeActivityBitmapCanvas.height !== bitmapHeight ||
+        spikeActivityBitmap === null
+    ) {
+        spikeActivityBitmapCanvas.width = SPIKE_ACTIVITY_BIN_COUNT;
+        spikeActivityBitmapCanvas.height = bitmapHeight;
+        spikeActivityBitmap = spikeActivityBitmapCtx.createImageData(
+            SPIKE_ACTIVITY_BIN_COUNT,
+            bitmapHeight
+        );
+    }
+
+    const pixels = spikeActivityBitmap.data;
+    pixels.fill(0);
+
+    if (latestSpikeBin !== null) {
+        for (const [binId, occupiedNeurons] of spikeBins) {
+            const ageInBins = latestSpikeBin - binId;
+            const column = SPIKE_ACTIVITY_BIN_COUNT - 1 - ageInBins;
+            if (column < 0 || column >= SPIKE_ACTIVITY_BIN_COUNT) continue;
+
+            for (let neuronIndex = 0; neuronIndex < occupiedNeurons.length; neuronIndex++) {
+                if (occupiedNeurons[neuronIndex] === 0) continue;
+
+                const pixelIndex = (neuronIndex * SPIKE_ACTIVITY_BIN_COUNT + column) * 4;
+                pixels[pixelIndex] = 0;
+                pixels[pixelIndex + 1] = 255;
+                pixels[pixelIndex + 2] = 65;
+                pixels[pixelIndex + 3] = 255;
+            }
+        }
+    }
+
+    spikeActivityBitmapCtx.putImageData(spikeActivityBitmap, 0, 0);
+    snnCtx.imageSmoothingEnabled = false;
+    snnCtx.drawImage(spikeActivityBitmapCanvas, x, y, width, height);
+}
+
+function neuronY(index, plotTop, plotHeight) {
+    return plotTop + ((index + 0.5) / Math.max(1, spikeActivityNeuronCount)) * plotHeight;
+}
+
+resizeSpikeCanvas();
 toggleBtn.addEventListener('click', toggleSimulation);

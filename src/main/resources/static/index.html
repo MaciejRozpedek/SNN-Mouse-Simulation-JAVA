@@ -71,14 +71,6 @@
                 <span id="weightRange">0.00 / 0.00</span>
             </div>
         </div>
-
-        <div class="snn-visualizer-container">
-            <div class="visualizer-header">
-                <h3>SNN ACTIVITY MAP</h3>
-                <button id="toggleNetBtn" class="btn secondary small">Show Map</button>
-            </div>
-            <canvas id="snnCanvas" width="250" height="150"></canvas>
-        </div>
     </div>
 
     <footer class="sidebar-footer">
@@ -89,6 +81,16 @@
 <main class="simulation-view">
     <canvas id="simCanvas" width="1000" height="800"></canvas>
 </main>
+
+<aside class="spike-activity-sidebar">
+    <div class="snn-visualizer-container">
+        <div class="visualizer-header">
+            <h3>SPIKE ACTIVITY</h3>
+            <button id="toggleNetBtn" class="btn secondary small">Show Spikes</button>
+        </div>
+        <canvas id="snnCanvas" width="250" height="170" aria-label="SNN spike activity over time"></canvas>
+    </div>
+</aside>
 
 <script src="script.js"></script>
 </body>
