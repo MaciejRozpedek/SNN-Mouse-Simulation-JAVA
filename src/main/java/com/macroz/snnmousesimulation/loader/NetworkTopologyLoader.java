@@ -168,15 +168,16 @@ public class NetworkTopologyLoader {
                 }
             }
 
-            // Find the group (reusing your existing findMatchingGroups logic)
-            // We assume the source_group points to a specific single group
-            var sourceGroupPair = findMatchingGroups(sourceGroupPattern, sourceGroupPattern, false).stream()
-                    .filter(pair -> pair.from().getFullName().equals(pair.to().getFullName())) // Ensure it's the group itself
-                    .findFirst()
+            var sourceGroup = findMatchingGroups(sourceGroupPattern, sourceGroupPattern, false).stream()
+                    .filter(pair -> pair.from().getFullName().equals(pair.to().getFullName()))
+                    .map(GroupPair::from)
+                    .reduce((a, b) -> {
+                        throw new SnnParseException("Output source group '" + sourceGroupPattern + "' is ambiguous.", outputNode.getStartMark());
+                    })
                     .orElseThrow(() -> new SnnParseException("Output source group '" + sourceGroupPattern + "' not found.", outputNode.getStartMark()));
 
             int sourceTypeId = sourceType.equals("all") ? -1 : getNeuronTypeId(sourceType, outputNode);
-            List<Integer> sourceNeurons = collectNeurons(sourceGroupPair.from(), sourceTypeId);
+            List<Integer> sourceNeurons = collectNeurons(sourceGroup, sourceTypeId);
 
             outputConfigs.add(new OutputConfig(
                     name,
@@ -361,7 +362,7 @@ public class NetworkTopologyLoader {
                     Collections.shuffle(candidates, random);
                     int limit = Math.min(count, candidates.size());
                     for (int k = 0; k < limit; k++) {
-                        addConnection(src, candidates.get(k), weightGen, false);
+                        addConnection(src, candidates.get(k), weightGen, allowAutapses);
                     }
                 }
             }
@@ -376,7 +377,7 @@ public class NetworkTopologyLoader {
                     Collections.shuffle(candidates, random);
                     int limit = Math.min(count, candidates.size());
                     for (int k = 0; k < limit; k++) {
-                        addConnection(candidates.get(k), tgt, weightGen, false);
+                        addConnection(candidates.get(k), tgt, weightGen, allowAutapses);
                     }
                 }
             }
@@ -386,7 +387,7 @@ public class NetworkTopologyLoader {
 
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     private boolean isValidConnection(int src, int tgt, boolean allowAutapses) {
-        if (allowAutapses && src == tgt) return false;
+        if (!allowAutapses && src == tgt) return false;
         return !existingConnections.get(src).contains(tgt);
     }
 
