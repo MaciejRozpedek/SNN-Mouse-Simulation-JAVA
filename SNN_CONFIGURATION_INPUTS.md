@@ -1,6 +1,6 @@
 # SNN input strategies
 
-This document describes the concrete strategies accepted by the `sensor_type`
+This document describes the concrete strategies accepted by the `input_type`
 property in the `inputs` section. The general configuration structure is
 documented in [`SNN_CONFIGURATION.md`](SNN_CONFIGURATION.md).
 
@@ -18,7 +18,7 @@ from multiple visible food items are added together.
 
 ```yaml
 - name: VisionFront
-  sensor_type: GAUSSIAN_VISION
+  input_type: GAUSSIAN_VISION
   target_group: Cortex.Layer1
   target_type: RS
   params:
@@ -45,7 +45,7 @@ target neuron and simulation step:
 
 ```yaml
 - name: BackgroundDrive
-  sensor_type: TONIC_NOISE
+  input_type: TONIC_NOISE
   target_group: Cortex.Layer2
   target_type: RS
   params:

@@ -111,7 +111,7 @@ public class NetworkTopologyLoader {
 
         for (Node inputNode : sequenceNode.getValue()) {
             String name = nodeAs(getChildNodeRequired(inputNode, "name"), String.class);
-            String type = nodeAs(getChildNodeRequired(inputNode, "sensor_type"), String.class);
+            String type = nodeAs(getChildNodeRequired(inputNode, "input_type"), String.class);
             String target = nodeAs(getChildNodeRequired(inputNode, "target_group"), String.class);
             String targetType = nodeAs(getChildNodeRequired(inputNode, "target_type"), String.class);
 

@@ -128,7 +128,7 @@ This section defines external input sources to neuron groups.
 ```yaml
 inputs:
   - name: <string>
-    sensor_type: <string>
+    input_type: <string>
     target_group: <string>
     target_type: <string>
     params:
@@ -136,7 +136,7 @@ inputs:
 ```
 ### Properties
 *   `name` (`<string>`): A unique name for the input source.
-*   `sensor_type` (`<string>`): The type of sensor providing the input (e.g. "GAUSSIAN_VISION").
+*   `input_type` (`<string>`): The input type (e.g. "GAUSSIAN_VISION").
 *   `target_group` (`<string>`): The name of the neuron group receiving the input.
 *   `target_type` (`<string>`): The type of neurons within the target group that will receive the input (can be a specific type or "all").
 *   `params`: A map of input-specific parameters.
