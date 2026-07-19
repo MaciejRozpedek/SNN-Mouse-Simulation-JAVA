@@ -1,6 +1,6 @@
-# SNN input strategies
+# SNN input types
 
-This document describes the concrete strategies accepted by the `input_type`
+This document describes the concrete input types accepted by the `input_type`
 property in the `inputs` section. The general configuration structure is
 documented in [`SNN_CONFIGURATION.md`](SNN_CONFIGURATION.md).
 

@@ -62,9 +62,10 @@ inputs:
       overlap_factor: 1.5
       max_current: 10.0
 
-  # -----------------------------------------------------------------------------
-  # 3. Output Definitions
-  # -----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
+# 4. Output Definitions
+# -----------------------------------------------------------------------------
+# Defines outputs from specific neuron groups.
 outputs:
   - name: MotorControl
     output_type: POPULATION_DRIVE
@@ -75,7 +76,7 @@ outputs:
       turn_factor: 0.1
 
 # -----------------------------------------------------------------------------
-# 4. Connection Rules
+# 5. Connection Rules
 # -----------------------------------------------------------------------------
 # A list of rules that create synapses between neuron groups.
 connections:

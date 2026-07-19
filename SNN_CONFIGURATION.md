@@ -1,6 +1,6 @@
 # Configuration File Schema
 
-This document describes the configuration format for defining a neural network model. It is organized into three main sections: `neuron_types`, `groups`, and `connections`.
+This document describes the configuration format for defining a neural network model. It is organized into five main sections: `neuron_types`, `groups`, `inputs`, `outputs`, and `connections`.
 
 ## `neuron_types`
 
@@ -121,6 +121,7 @@ Defines the connection pattern. **Exactly one** of the following topology rules 
     *   `count` (`<integer>`): The exact number of sources for each target neuron.
 
 ## `inputs`
+
 This section defines external input sources to neuron groups.
 
 ### Structure
@@ -134,33 +135,41 @@ inputs:
     params:
       # ... (input-specific parameters)
 ```
+
 ### Properties
+
 *   `name` (`<string>`): A unique name for the input source.
 *   `input_type` (`<string>`): The input type (e.g. "GAUSSIAN_VISION").
 *   `target_group` (`<string>`): The name of the neuron group receiving the input.
 *   `target_type` (`<string>`): The type of neurons within the target group that will receive the input (can be a specific type or "all").
 *   `params`: A map of input-specific parameters.
 
-Concrete input strategies and their parameters are documented in
+Concrete input types and their parameters are documented in
 [`SNN_CONFIGURATION_INPUTS.md`](SNN_CONFIGURATION_INPUTS.md).
 
 ## `outputs`
-This section defines external input sources to neuron groups.
+
+This section defines outputs based on the activity of neuron groups.
 
 ### Structure
 
 ```yaml
 outputs:
   - name: <string>
-    sensor_type: <string>
-    target_group: <string>
-    target_type: <string>
+    output_type: <string>
+    source_group: <string>
+    source_type: <string>
     params:
       # ... (output-specific parameters)
 ```
+
 ### Properties
+
 *   `name` (`<string>`): A unique name for the output source.
-*   `sensor_type` (`<string>`): The type of sensor providing the output (e.g. "POPULATION_DRIVE").
-*   `target_group` (`<string>`): The name of group from which the output is taken.
-*   `target_type` (`<string>`): The type of neurons from which the output is taken (can be a specific type or "all").
-*   `params`: A map of output-specific parameters (e.g. "speed_per_spike", "turn_factor" for POPULATION_DRIVE).
+*   `output_type` (`<string>`): The output type used to interpret source-neuron activity (e.g. "POPULATION_DRIVE").
+*   `source_group` (`<string>`): The name of group from which the output is taken.
+*   `source_type` (`<string>`): The type of neurons from which the output is taken (can be a specific type or "all").
+*   `params`: A map of output-specific parameters.
+
+Concrete output types and their parameters are documented in
+[`SNN_CONFIGURATION_OUTPUTS.md`](SNN_CONFIGURATION_OUTPUTS.md).
