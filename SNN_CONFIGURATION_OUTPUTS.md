@@ -10,19 +10,9 @@ documented in [`SNN_CONFIGURATION.md`](SNN_CONFIGURATION.md).
 
 ## `POPULATION_DRIVE`
 
-Converts spikes from the selected source neurons into movement. The source
-neurons are divided by their order into two motor populations: the first half
-controls the left motor and the second half controls the right motor. An even
-number of source neurons gives both populations the same size.
-
-For every simulation step, motor power and movement are calculated as follows:
-
-```text
-left_motor_power  = left_spikes  * speed_per_spike
-right_motor_power = right_spikes * speed_per_spike
-forward_speed     = (left_motor_power + right_motor_power) / 2
-rotation          = (left_motor_power - right_motor_power) * turn_factor
-```
+Moves the agent based on spikes from the selected neurons. All neurons control
+forward speed. The first half turns the agent left and the second half turns it
+right.
 
 ```yaml
 - name: MotorControl
@@ -30,12 +20,11 @@ rotation          = (left_motor_power - right_motor_power) * turn_factor
   source_group: Cortex.Layer3
   source_type: RS
   params:
-    speed_per_spike: 0.1
-    turn_factor: 0.1
+    speed: 2.0
+    turn_rate: 90.0
 ```
 
 Parameters:
 
-- `speed_per_spike` - motor power contributed by each spike; default `0.5`.
-- `turn_factor` - scales the rotation caused by the difference between left and
-  right motor power; default `0.03`.
+- `speed` - maximum speed in meters per second; default `0.5`.
+- `turn_rate` - maximum turn rate in degrees per second; default `90`.

@@ -1,28 +1,29 @@
 package com.macroz.snnmousesimulation.core.output.concrete;
 
 import com.macroz.snnmousesimulation.core.output.OutputStrategy;
+import com.macroz.snnmousesimulation.utility.ConfigParameterReader;
 import com.macroz.snnmousesimulation.world.Agent;
 
 import java.util.Map;
 
 public class PopulationDriveStrategy implements OutputStrategy {
 
-    private final double speedPerSpike;
-    private final double turnFactor;
+    private final double speedPerSecond;
+    private final double rotationDegreesPerSecond;
 
-    private PopulationDriveStrategy(double speedPerSpike, double turnFactor) {
-        this.speedPerSpike = speedPerSpike;
-        this.turnFactor = turnFactor;
+    private PopulationDriveStrategy(double speedPerSecond, double rotationDegreesPerSecond) {
+        this.speedPerSecond = speedPerSecond;
+        this.rotationDegreesPerSecond = rotationDegreesPerSecond;
     }
 
     public static PopulationDriveStrategy create(Map<String, Object> params) {
-        double speed = ((Number) params.getOrDefault("speed_per_spike", 0.5)).doubleValue();
-        double turn = ((Number) params.getOrDefault("turn_factor", 0.03)).doubleValue();
-        return new PopulationDriveStrategy(speed, turn);
+        double speed = ConfigParameterReader.getDouble(params, "speed", 0.5);
+        double rotation = ConfigParameterReader.getDouble(params, "turn_rate", 90.0);
+        return new PopulationDriveStrategy(speed, rotation);
     }
 
     @Override
-    public void apply(Agent agent, boolean[] firedLocalIndices, double deltaTime) {
+    public void apply(Agent agent, boolean[] firedLocalIndices, double deltaTimeMs) {
         int count = firedLocalIndices.length;
         if (count < 2) return;
 
@@ -30,23 +31,28 @@ public class PopulationDriveStrategy implements OutputStrategy {
         int leftSpikes = 0;
         int rightSpikes = 0;
 
-        // Sum spikes for Left Motor (First half of the group)
         for (int i = 0; i < midPoint; i++) {
-            if (firedLocalIndices[i]) leftSpikes++;
+            if (firedLocalIndices[i]) {
+                leftSpikes++;
+            }
         }
 
-        // Sum spikes for Right Motor (Second half of the group)
         for (int i = midPoint; i < count; i++) {
-            if (firedLocalIndices[i]) rightSpikes++;
+            if (firedLocalIndices[i]) {
+                rightSpikes++;
+            }
         }
-        double leftMotorPower = leftSpikes * speedPerSpike;
-        double rightMotorPower = rightSpikes * speedPerSpike;
 
-        double forwardSpeed = (leftMotorPower + rightMotorPower) / 2.0;
-        double rotation = (leftMotorPower - rightMotorPower) * turnFactor;
+        int totalSpikes = leftSpikes + rightSpikes;
 
-        if (forwardSpeed > 0 || Math.abs(rotation) > 0) {
-            agent.move(forwardSpeed, rotation);
+        double forwardSpeed = totalSpikes * (speedPerSecond / count);
+
+        double rotationRateDegrees = 2.0 * (leftSpikes - rightSpikes) * rotationDegreesPerSecond / count;
+
+        if (forwardSpeed > 0 || Math.abs(rotationRateDegrees) > 0) {
+            double deltaTimeSeconds = deltaTimeMs / 1000.0;
+            double rotationRadians = Math.toRadians(rotationRateDegrees * deltaTimeSeconds);
+            agent.move(forwardSpeed * deltaTimeSeconds * 1000.0, rotationRadians);
         }
     }
 }
