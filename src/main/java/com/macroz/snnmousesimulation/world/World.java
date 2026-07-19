@@ -32,25 +32,11 @@ public class World {
         this.height = height;
         this.food = new ArrayList<>();
         this.worldView = WorldView.from(this);
-        initializeFood(numberOfFood);
         this.agent = new Agent(width / 2, height / 2, snnNetworkData);
+        initializeFood(numberOfFood);
     }
 
     public void update(double deltaTime) {
-        Food closestFood = null;
-        double minDistanceSquared = Double.MAX_VALUE;
-
-        for (Food f : food) {
-            double dx = f.x() - agent.getX();
-            double dy = f.y() - agent.getY();
-            double distSq = dx * dx + dy * dy;
-
-            if (distSq < minDistanceSquared) {
-                minDistanceSquared = distSq;
-                closestFood = f;
-            }
-        }
-
         InputFrame inputFrame = new InputFrame(
                 AgentView.from(agent),
                 worldView,
@@ -64,14 +50,14 @@ public class World {
         currentTickEvents.clear();
         handleBoundaries(simulationTimeMs);
 
-        if (closestFood != null) {
-            double newDx = closestFood.x() - agent.getX();
-            double newDy = closestFood.y() - agent.getY();
-            double newDistSq = newDx * newDx + newDy * newDy;
-
-            if (newDistSq < (EAT_RADIUS * EAT_RADIUS)) {
-                handleFoodCollision(closestFood, simulationTimeMs);
+        List<Food> collidedFoods = new ArrayList<>();
+        for (Food f : food) {
+            if (distanceSquared(f.x(), f.y(), agent.getX(), agent.getY()) < EAT_RADIUS * EAT_RADIUS) {
+                collidedFoods.add(f);
             }
+        }
+        for (Food f : collidedFoods) {
+            handleFoodCollision(f, simulationTimeMs);
         }
 
         pendingAgentEvents = currentTickEvents.isEmpty() ? List.of() : List.copyOf(currentTickEvents);
@@ -92,9 +78,19 @@ public class World {
     }
 
     private void spawnSingleFood() {
-        double x = random.nextDouble(0, width);
-        double y = random.nextDouble(0, height);
+        double x;
+        double y;
+        do {
+            x = random.nextDouble(0, width);
+            y = random.nextDouble(0, height);
+        } while (distanceSquared(x, y, agent.getX(), agent.getY()) < EAT_RADIUS * EAT_RADIUS);
         food.add(new Food(x, y));
+    }
+
+    private double distanceSquared(double x1, double y1, double x2, double y2) {
+        double dx = x1 - x2;
+        double dy = y1 - y2;
+        return dx * dx + dy * dy;
     }
 
     private double normalizeAngle(double angle) {
@@ -111,12 +107,12 @@ public class World {
 
         // Check horizontal walls (Left/Right)
         if (x < 0) {
-            x = 0;
+            x = -x;
             angle = Math.PI - angle;
             bounced = true;
             currentTickEvents.add(new BoundaryHit(timestampMs, BoundaryHit.Side.LEFT));
         } else if (x > width) {
-            x = width;
+            x = 2 * width - x;
             angle = Math.PI - angle;
             bounced = true;
             currentTickEvents.add(new BoundaryHit(timestampMs, BoundaryHit.Side.RIGHT));
@@ -124,12 +120,12 @@ public class World {
 
         // Check vertical walls (Top/Bottom)
         if (y < 0) {
-            y = 0;
+            y = -y;
             angle = -angle;
             bounced = true;
             currentTickEvents.add(new BoundaryHit(timestampMs, BoundaryHit.Side.TOP));
         } else if (y > height) {
-            y = height;
+            y = 2 * height - y;
             angle = -angle;
             bounced = true;
             currentTickEvents.add(new BoundaryHit(timestampMs, BoundaryHit.Side.BOTTOM));
