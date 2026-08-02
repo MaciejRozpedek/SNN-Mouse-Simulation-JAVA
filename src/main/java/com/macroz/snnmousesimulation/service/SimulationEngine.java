@@ -23,6 +23,7 @@ public class SimulationEngine {
     private Thread simulationThread;
     private Thread sseBroadcastThread;
 
+    private final Object worldLock = new Object();
     private World world;
     private final List<SseEmitter> emitters = new CopyOnWriteArrayList<>();
 
@@ -35,8 +36,12 @@ public class SimulationEngine {
         this.speedMultiplier = Math.max(0.1, Math.min(1.0, multiplier));
     }
 
-    public void startSimulation() {
+    public synchronized void startSimulation() {
         if (running) return;
+        if ((simulationThread != null && simulationThread.isAlive())
+                || (sseBroadcastThread != null && sseBroadcastThread.isAlive())) {
+            throw new IllegalStateException("Previous simulation threads are still running.");
+        }
 
         running = true;
         simulationThread = new Thread(this::runLoop, "Simulation-Loop");
@@ -48,9 +53,11 @@ public class SimulationEngine {
         sseBroadcastThread.start();
     }
 
-    public void reloadSimulation() {
-        stopSimulation();
-        this.world = new World(1000, 800, 100, snnConfigProvider.loadConfig());
+    public synchronized void reloadSimulation() {
+        stopSimulationLocked();
+        synchronized (worldLock) {
+            this.world = new World(1000, 800, 100, snnConfigProvider.loadConfig());
+        }
     }
 
     private void runLoop() {
@@ -67,7 +74,7 @@ public class SimulationEngine {
 
     private void tick(double deltaTime) {
         try {
-            synchronized (this) {
+            synchronized (worldLock) {
                 world.update(deltaTime);
             }
         } catch (Exception e) {
@@ -86,7 +93,7 @@ public class SimulationEngine {
 
             try {
                 SimulationState state;
-                synchronized (this) {
+                synchronized (worldLock) {
                     state = getSimulationState();
                 }
                 broadcast(state);
@@ -132,33 +139,46 @@ public class SimulationEngine {
         }
     }
 
-    public SseEmitter subscribe() {
+    public synchronized SseEmitter subscribe() {
         SseEmitter emitter = new SseEmitter(0L); // No timeout
         
         emitter.onCompletion(() -> emitters.remove(emitter));
         emitter.onTimeout(() -> emitters.remove(emitter));
         emitter.onError(e -> emitters.remove(emitter));
         
+        if (!running) {
+            emitter.complete();
+            return emitter;
+        }
         emitters.add(emitter);
         return emitter;
     }
 
     @PreDestroy
-    public void stopSimulation() {
+    public synchronized void stopSimulation() {
+        stopSimulationLocked();
+    }
+
+    private void stopSimulationLocked() {
         running = false;
-        stopThread(simulationThread, "simulation");
-        stopThread(sseBroadcastThread, "SSE broadcast");
-        simulationThread = null;
-        sseBroadcastThread = null;
+        boolean simulationStopped = stopThread(simulationThread, "simulation");
+        boolean sseBroadcastStopped = stopThread(sseBroadcastThread, "SSE broadcast");
+
+        if (simulationStopped) simulationThread = null;
+        if (sseBroadcastStopped) sseBroadcastThread = null;
 
         for (SseEmitter emitter : emitters) {
             emitter.complete();
         }
         emitters.clear();
+
+        if (!simulationStopped || !sseBroadcastStopped) {
+            throw new IllegalStateException("Simulation threads did not stop within the timeout.");
+        }
     }
 
-    private void stopThread(Thread thread, String threadName) {
-        if (thread == null) return;
+    private boolean stopThread(Thread thread, String threadName) {
+        if (thread == null) return true;
 
         thread.interrupt();
         try {
@@ -166,7 +186,9 @@ public class SimulationEngine {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             System.err.println("Failed to join " + threadName + " thread");
+            return false;
         }
+        return !thread.isAlive();
     }
 
     private SimulationState getSimulationState() {
