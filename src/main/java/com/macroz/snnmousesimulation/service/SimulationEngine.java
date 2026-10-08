@@ -14,7 +14,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 @Service
 public class SimulationEngine {
     private final SnnConfigProvider snnConfigProvider;
-    private static final long TICK_RATE_MS = 1;
+    private static final double TICK_RATE_MS = 1;
     private static final int SSE_BROADCAST_FPS = 60;
     private static final long SSE_BROADCAST_INTERVAL_NS = 1_000_000_000L / SSE_BROADCAST_FPS;
 
@@ -33,7 +33,9 @@ public class SimulationEngine {
     }
 
     public void setSpeedMultiplier(double multiplier) {
-        this.speedMultiplier = Math.max(0.1, Math.min(1.0, multiplier));
+        if (!Double.isNaN(multiplier)) {
+            this.speedMultiplier = Math.max(0.1, Math.min(1.0, multiplier));
+        }
     }
 
     public synchronized void startSimulation() {

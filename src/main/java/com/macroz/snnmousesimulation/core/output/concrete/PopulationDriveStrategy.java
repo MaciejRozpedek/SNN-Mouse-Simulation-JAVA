@@ -52,7 +52,7 @@ public class PopulationDriveStrategy implements OutputStrategy {
         if (forwardSpeed > 0 || Math.abs(rotationRateDegrees) > 0) {
             double deltaTimeSeconds = deltaTimeMs / 1000.0;
             double rotationRadians = Math.toRadians(rotationRateDegrees * deltaTimeSeconds);
-            agent.move(forwardSpeed * deltaTimeSeconds * 1000.0, rotationRadians);
+            agent.move(forwardSpeed * deltaTimeSeconds, rotationRadians);
         }
     }
 }

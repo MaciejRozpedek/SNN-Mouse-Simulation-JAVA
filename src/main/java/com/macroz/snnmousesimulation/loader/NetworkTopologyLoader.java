@@ -55,7 +55,7 @@ public class NetworkTopologyLoader {
         loadGroups(getChildNodeRequired(root, "groups"), rootGroup);
         rootGroup.setTotalCount(totalNeuronCount);
 
-        for(int i = 0; i < totalNeuronCount; i++) {
+        for (int i = 0; i < totalNeuronCount; i++) {
             synapticTargets.add(new ArrayList<>());
             synapticWeights.add(new ArrayList<>());
             existingConnections.add(new HashSet<>());
@@ -129,7 +129,7 @@ public class NetworkTopologyLoader {
             var targetGroup = findMatchingGroups(target, target, false).stream()
                     .filter(pair -> pair.from().getFullName().equals(pair.to().getFullName()))
                     .map(GroupPair::from)
-                    .reduce( (a, b) -> {
+                    .reduce((a, b) -> {
                         throw new SnnParseException("Input target group '" + target + "' is ambiguous.", inputNode.getStartMark());
                     })
                     .orElseThrow(() -> new SnnParseException("Input target group '" + target + "' not found.", inputNode.getStartMark()));
@@ -485,9 +485,9 @@ public class NetworkTopologyLoader {
     }
 
     private void findMatchingGroupsRecursive(GroupInfo currentFrom, GroupInfo rootForTo,
-                                           String[] fromSegments, String[] toSegments,
-                                           int index, Map<Integer, String> wildcardValues,
-                                           boolean excludeSelf, List<GroupPair> matchedPairs) {
+                                             String[] fromSegments, String[] toSegments,
+                                             int index, Map<Integer, String> wildcardValues,
+                                             boolean excludeSelf, List<GroupPair> matchedPairs) {
 
         if (index == fromSegments.length) {
             findMatchingToGroups(currentFrom, rootForTo, toSegments, 0, wildcardValues, excludeSelf, matchedPairs);
@@ -523,9 +523,9 @@ public class NetworkTopologyLoader {
     }
 
     private void findMatchingToGroups(GroupInfo fixedFrom, GroupInfo currentTo,
-                                    String[] toSegments, int index,
-                                    Map<Integer, String> wildcardValues,
-                                    boolean excludeSelf, List<GroupPair> matchedPairs) {
+                                      String[] toSegments, int index,
+                                      Map<Integer, String> wildcardValues,
+                                      boolean excludeSelf, List<GroupPair> matchedPairs) {
 
         if (index == toSegments.length) {
             if (excludeSelf && fixedFrom.getFullName().equals(currentTo.getFullName())) {

@@ -44,7 +44,7 @@ public final class TonicNoiseStrategy implements InputStrategy {
 
         double[] currents = new double[targetNeuronCount];
         for (int i = 0; i < targetNeuronCount; i++) {
-            currents[i] = baseCurrent + noiseStd * random.nextGaussian();
+            currents[i] = Math.max(0.0, baseCurrent + noiseStd * random.nextGaussian());
         }
         return currents;
     }

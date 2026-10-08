@@ -2,10 +2,7 @@ package com.macroz.snnmousesimulation.api;
 
 import com.macroz.snnmousesimulation.service.SimulationEngine;
 import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 @RestController
@@ -34,7 +31,7 @@ public class SimulationController {
     }
 
     @PostMapping("/speed")
-    public void setSpeed(@org.springframework.web.bind.annotation.RequestParam double multiplier) {
+    public void setSpeed(@RequestParam double multiplier) {
         simulationEngine.setSpeedMultiplier(multiplier);
     }
 

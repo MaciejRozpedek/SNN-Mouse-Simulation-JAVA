@@ -1,6 +1,9 @@
 package com.macroz.snnmousesimulation.core.output;
 
+import com.macroz.snnmousesimulation.core.output.concrete.ForwardDriveStrategy;
 import com.macroz.snnmousesimulation.core.output.concrete.PopulationDriveStrategy;
+import com.macroz.snnmousesimulation.core.output.concrete.TurnLeftStrategy;
+import com.macroz.snnmousesimulation.core.output.concrete.TurnRightStrategy;
 import com.macroz.snnmousesimulation.exception.AgentConfigurationException;
 import com.macroz.snnmousesimulation.exception.AgentConfigurationException.StrategyType;
 
@@ -14,6 +17,9 @@ public class OutputStrategyFactory {
 
     static {
         register("POPULATION_DRIVE", PopulationDriveStrategy::create);
+        register("FORWARD_DRIVE", ForwardDriveStrategy::create);
+        register("TURN_LEFT", TurnLeftStrategy::create);
+        register("TURN_RIGHT", TurnRightStrategy::create);
     }
 
     public static void register(String type, Function<Map<String, Object>, OutputStrategy> factory) {

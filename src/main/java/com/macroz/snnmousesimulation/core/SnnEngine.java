@@ -9,20 +9,20 @@ import java.util.List;
 public class SnnEngine {
 
     // STDP Constants
-    private static final double TAU_PLUS = 5.0;
-    private static final double TAU_MINUS = 5.0;
-    private static final double A_PLUS = 0.01;
-    private static final double A_MINUS = 0.012;
+    private static final double TAU_PLUS = 20.0;
+    private static final double TAU_MINUS = 20.0;
+    private static final double A_PLUS = 0.10;
+    private static final double A_MINUS = 0.15;
     private static final double MAX_WEIGHT = 50.0;
 
     // dopamine
-    private static final double TAU_C = 1000.0;
-    private static final double TAU_D = 20.0;
-    private static final double TAU_BASE_D = 200.0;
+    private static final double TAU_C = 476.0;
+    private static final double TAU_D = 50.0;
+    private static final double TAU_BASE_D = 7000.0;
     @Getter
     private double dopamineLevel = 0.0;
     @Getter
-    private double dopamineBaseLevel = 0.0;
+    private double dopamineBaseLevel = -0.0004;
     private final double[][] eligibilityTraces;
 
     @Getter
