@@ -1,6 +1,7 @@
 package com.macroz.snnmousesimulation.core.input;
 
 import com.macroz.snnmousesimulation.core.input.concrete.GaussianVisionStrategy;
+import com.macroz.snnmousesimulation.core.input.concrete.OrnsteinUhlenbeckNoiseStrategy;
 import com.macroz.snnmousesimulation.core.input.concrete.TonicNoiseStrategy;
 import com.macroz.snnmousesimulation.exception.AgentConfigurationException;
 import com.macroz.snnmousesimulation.exception.AgentConfigurationException.StrategyType;
@@ -16,6 +17,7 @@ public class InputStrategyFactory {
     static {
         register("GAUSSIAN_VISION", GaussianVisionStrategy::create);
         register("TONIC_NOISE", TonicNoiseStrategy::create);
+        register("OU_NOISE", OrnsteinUhlenbeckNoiseStrategy::create);
     }
 
     public static void register(String type, Function<Map<String, Object>, InputStrategy> factory) {

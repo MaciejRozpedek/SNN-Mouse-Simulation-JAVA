@@ -14,11 +14,12 @@ public final class TonicNoiseStrategy implements InputStrategy {
 
     private final double baseCurrent;
     private final double noiseStd;
+    private final boolean allowNegative;
     private final Random random;
 
-    public TonicNoiseStrategy(double baseCurrent, double noiseStd, Long seed) {
-        if (!Double.isFinite(baseCurrent) || baseCurrent < 0) {
-            throw new IllegalArgumentException("Base current must be finite and non-negative.");
+    public TonicNoiseStrategy(double baseCurrent, double noiseStd, boolean allowNegative, Long seed) {
+        if (!Double.isFinite(baseCurrent)) {
+            throw new IllegalArgumentException("Base current must be finite.");
         }
         if (!Double.isFinite(noiseStd) || noiseStd < 0) {
             throw new IllegalArgumentException("Noise standard deviation must be finite and non-negative.");
@@ -26,6 +27,7 @@ public final class TonicNoiseStrategy implements InputStrategy {
 
         this.baseCurrent = baseCurrent;
         this.noiseStd = noiseStd;
+        this.allowNegative = allowNegative;
         this.random = seed == null ? new Random() : new Random(seed);
     }
 
@@ -33,6 +35,7 @@ public final class TonicNoiseStrategy implements InputStrategy {
         return new TonicNoiseStrategy(
                 ConfigParameterReader.getDouble(params, "base_current", 0.0),
                 ConfigParameterReader.getDouble(params, "noise_std", 0.0),
+                ConfigParameterReader.getBoolean(params, "allow_negative", false),
                 ConfigParameterReader.getOptionalLong(params, "seed"));
     }
 
@@ -44,7 +47,8 @@ public final class TonicNoiseStrategy implements InputStrategy {
 
         double[] currents = new double[targetNeuronCount];
         for (int i = 0; i < targetNeuronCount; i++) {
-            currents[i] = Math.max(0.0, baseCurrent + noiseStd * random.nextGaussian());
+            double current = baseCurrent + noiseStd * random.nextGaussian();
+            currents[i] = allowNegative ? current : Math.max(0.0, current);
         }
         return currents;
     }

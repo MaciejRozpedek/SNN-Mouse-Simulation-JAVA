@@ -18,6 +18,17 @@ public final class ConfigParameterReader {
         return number.doubleValue();
     }
 
+    public static boolean getBoolean(Map<String, Object> params, String name, boolean defaultValue) {
+        Object value = params.get(name);
+        if (value == null) {
+            return defaultValue;
+        }
+        if (!(value instanceof Boolean bool)) {
+            throw new IllegalArgumentException("Parameter '" + name + "' must be a boolean.");
+        }
+        return bool;
+    }
+
     public static double getNonNegativeDouble(Map<String, Object> params, String name, double defaultValue) {
         Object value = params == null ? null : params.get(name);
         if (value == null) {
