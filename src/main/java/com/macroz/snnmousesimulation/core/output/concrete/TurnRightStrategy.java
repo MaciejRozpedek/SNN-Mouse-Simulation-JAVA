@@ -1,10 +1,9 @@
 package com.macroz.snnmousesimulation.core.output.concrete;
 
 import com.macroz.snnmousesimulation.core.output.OutputStrategy;
-import com.macroz.snnmousesimulation.utility.ConfigParameterReader;
+import com.macroz.snnmousesimulation.utility.ConfigParams;
 import com.macroz.snnmousesimulation.world.Agent;
 
-import java.util.Map;
 
 /** Maps every spike in the assigned population to a negative rotation. */
 public final class TurnRightStrategy implements OutputStrategy {
@@ -15,8 +14,8 @@ public final class TurnRightStrategy implements OutputStrategy {
         this.rotationDegreesPerSecond = rotationDegreesPerSecond;
     }
 
-    public static TurnRightStrategy create(Map<String, Object> params) {
-        return new TurnRightStrategy(ConfigParameterReader.getNonNegativeDouble(params, "turn_rate", 0.03));
+    public static TurnRightStrategy create(ConfigParams params) {
+        return new TurnRightStrategy(params.getNonNegativeDouble("turn_rate", 0.03));
     }
 
     @Override

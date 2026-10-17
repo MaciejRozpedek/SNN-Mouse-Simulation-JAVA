@@ -1,5 +1,7 @@
 package com.macroz.snnmousesimulation.exception;
 
+import com.macroz.snnmousesimulation.utility.ConfigValue;
+
 import java.util.Map;
 
 public class AgentConfigurationException extends RuntimeException {
@@ -20,8 +22,8 @@ public class AgentConfigurationException extends RuntimeException {
         }
     }
 
-    public AgentConfigurationException(StrategyType sType, String type, Map<String, Object> params, Throwable cause) {
-        super("Failed to create %sStrategy for type '%s' with params %s: %s"
+    public AgentConfigurationException(StrategyType sType, String type, Map<String, ConfigValue> params, Throwable cause) {
+        super("Failed to create %s for type '%s' with params %s: %s"
             .formatted(
                 sType,
                 type,

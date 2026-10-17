@@ -1,10 +1,9 @@
 package com.macroz.snnmousesimulation.core.output.concrete;
 
 import com.macroz.snnmousesimulation.core.output.OutputStrategy;
-import com.macroz.snnmousesimulation.utility.ConfigParameterReader;
+import com.macroz.snnmousesimulation.utility.ConfigParams;
 import com.macroz.snnmousesimulation.world.Agent;
 
-import java.util.Map;
 
 /**
  * Maps every spike in the assigned population to forward movement.
@@ -17,8 +16,8 @@ public final class ForwardDriveStrategy implements OutputStrategy {
         this.speedPerSecond = speedPerSecond;
     }
 
-    public static ForwardDriveStrategy create(Map<String, Object> params) {
-        return new ForwardDriveStrategy(ConfigParameterReader.getNonNegativeDouble(params, "speedPerSecond", 0.5));
+    public static ForwardDriveStrategy create(ConfigParams params) {
+        return new ForwardDriveStrategy(params.getNonNegativeDouble("speedPerSecond", 0.5));
     }
 
     @Override

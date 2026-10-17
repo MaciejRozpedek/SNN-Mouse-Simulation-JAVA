@@ -7,8 +7,10 @@ import com.macroz.snnmousesimulation.core.output.OutputConfig;
 import com.macroz.snnmousesimulation.exception.SnnParseException;
 import com.macroz.snnmousesimulation.loader.structure.GroupInfo;
 import com.macroz.snnmousesimulation.loader.structure.NeuronInfo;
+import com.macroz.snnmousesimulation.utility.ConfigValue;
 import com.macroz.snnmousesimulation.utility.WeightGenerator;
 import org.yaml.snakeyaml.Yaml;
+import org.yaml.snakeyaml.error.Mark;
 import org.yaml.snakeyaml.nodes.*;
 
 import java.io.InputStream;
@@ -115,16 +117,7 @@ public class NetworkTopologyLoader {
             String target = nodeAs(getChildNodeRequired(inputNode, "target_group"), String.class);
             String targetType = nodeAs(getChildNodeRequired(inputNode, "target_type"), String.class);
 
-            Map<String, Object> params = new HashMap<>();
-            Node paramsNode = getChildNode(inputNode, "params");
-            if (paramsNode instanceof MappingNode mappingNode) {
-                for (NodeTuple tuple : mappingNode.getValue()) {
-                    String key = nodeAs(tuple.getKeyNode(), String.class);
-                    Node valNode = tuple.getValueNode();
-                    Object value = parseScalarValue((ScalarNode) valNode);
-                    params.put(key, value);
-                }
-            }
+            Map<String, ConfigValue> params = loadParams(inputNode);
 
             var targetGroup = findMatchingGroups(target, target, false).stream()
                     .filter(pair -> pair.from().getFullName().equals(pair.to().getFullName()))
@@ -158,15 +151,7 @@ public class NetworkTopologyLoader {
             String sourceGroupPattern = nodeAs(getChildNodeRequired(outputNode, "source_group"), String.class);
             String sourceType = nodeAs(getChildNodeRequired(outputNode, "source_type"), String.class);
 
-            Map<String, Object> params = new HashMap<>();
-            Node paramsNode = getChildNode(outputNode, "params");
-            if (paramsNode instanceof MappingNode mappingNode) {
-                for (NodeTuple tuple : mappingNode.getValue()) {
-                    String key = nodeAs(tuple.getKeyNode(), String.class);
-                    Object value = parseScalarValue((ScalarNode) tuple.getValueNode());
-                    params.put(key, value);
-                }
-            }
+            Map<String, ConfigValue> params = loadParams(outputNode);
 
             var sourceGroup = findMatchingGroups(sourceGroupPattern, sourceGroupPattern, false).stream()
                     .filter(pair -> pair.from().getFullName().equals(pair.to().getFullName()))
@@ -186,6 +171,31 @@ public class NetworkTopologyLoader {
                     params
             ));
         }
+    }
+
+    // Values are kept raw; strategies convert them to the types they expect
+    private Map<String, ConfigValue> loadParams(Node parentNode) {
+        Map<String, ConfigValue> params = new LinkedHashMap<>();
+        Node paramsNode = getChildNode(parentNode, "params");
+        if (paramsNode == null || Tag.NULL.equals(paramsNode.getTag())) {
+            return params;
+        }
+        if (!(paramsNode instanceof MappingNode mappingNode)) {
+            throw new SnnParseException("'params' must be a map.", paramsNode.getStartMark());
+        }
+
+        for (NodeTuple tuple : mappingNode.getValue()) {
+            String name = nodeAs(tuple.getKeyNode(), String.class);
+            if (!(tuple.getValueNode() instanceof ScalarNode valueNode)) {
+                throw new SnnParseException("Parameter '" + name + "' must be a single value.", tuple.getValueNode().getStartMark());
+            }
+            if (params.containsKey(name)) {
+                throw new SnnParseException("Duplicate parameter '" + name + "'.", tuple.getKeyNode().getStartMark());
+            }
+            Mark mark = valueNode.getStartMark();
+            params.put(name, new ConfigValue(valueNode.getValue(), !valueNode.isPlain(), mark.getLine() + 1, mark.getColumn() + 1));
+        }
+        return Collections.unmodifiableMap(params);
     }
 
     private void loadNeuronTypes(Node node) {
@@ -590,14 +600,6 @@ public class NetworkTopologyLoader {
             throw new SnnParseException("Missing required key '" + key + "'.", parent.getStartMark());
         }
         return child;
-    }
-
-    private Object parseScalarValue(ScalarNode node) {
-        String val = node.getValue();
-        try { return Integer.parseInt(val); } catch (NumberFormatException e1) {}
-        try { return Double.parseDouble(val); } catch (NumberFormatException e2) {}
-        if ("true".equalsIgnoreCase(val) || "false".equalsIgnoreCase(val)) return Boolean.parseBoolean(val);
-        return val;
     }
 
     @SuppressWarnings("unchecked")

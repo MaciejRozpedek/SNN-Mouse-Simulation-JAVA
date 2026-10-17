@@ -10,16 +10,17 @@ public class SnnParseException extends RuntimeException {
 
     // Constructor with Mark for line and column information in YAML
     public SnnParseException(String message, Mark mark) {
-        super(buildMessage(message, mark));
+        super(mark != null
+                ? buildMessage(message, mark.getLine() + 1, mark.getColumn() + 1)
+                : "Parse error: " + message);
     }
 
-    private static String buildMessage(String message, Mark mark) {
-        if (mark != null) {
-            return String.format("Parse error (line: %d, column: %d): %s",
-                    mark.getLine() + 1,
-                    mark.getColumn() + 1,
-                    message);
-        }
-        return "Parse error: " + message;
+    // Line and column are 1-based
+    public SnnParseException(String message, int line, int column) {
+        super(buildMessage(message, line, column));
+    }
+
+    private static String buildMessage(String message, int line, int column) {
+        return String.format("Parse error (line: %d, column: %d): %s", line, column, message);
     }
 }

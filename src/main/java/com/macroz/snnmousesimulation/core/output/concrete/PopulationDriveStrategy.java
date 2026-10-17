@@ -1,10 +1,9 @@
 package com.macroz.snnmousesimulation.core.output.concrete;
 
 import com.macroz.snnmousesimulation.core.output.OutputStrategy;
-import com.macroz.snnmousesimulation.utility.ConfigParameterReader;
+import com.macroz.snnmousesimulation.utility.ConfigParams;
 import com.macroz.snnmousesimulation.world.Agent;
 
-import java.util.Map;
 
 public class PopulationDriveStrategy implements OutputStrategy {
 
@@ -16,9 +15,9 @@ public class PopulationDriveStrategy implements OutputStrategy {
         this.rotationDegreesPerSecond = rotationDegreesPerSecond;
     }
 
-    public static PopulationDriveStrategy create(Map<String, Object> params) {
-        double speed = ConfigParameterReader.getDouble(params, "speed", 0.5);
-        double rotation = ConfigParameterReader.getDouble(params, "turn_rate", 90.0);
+    public static PopulationDriveStrategy create(ConfigParams params) {
+        double speed = params.getDouble("speed", 0.5);
+        double rotation = params.getDouble("turn_rate", 90.0);
         return new PopulationDriveStrategy(speed, rotation);
     }
 

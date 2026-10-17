@@ -2,9 +2,8 @@ package com.macroz.snnmousesimulation.core.input.concrete;
 
 import com.macroz.snnmousesimulation.core.input.InputFrame;
 import com.macroz.snnmousesimulation.core.input.InputStrategy;
-import com.macroz.snnmousesimulation.utility.ConfigParameterReader;
+import com.macroz.snnmousesimulation.utility.ConfigParams;
 
-import java.util.Map;
 import java.util.Random;
 
 /**
@@ -56,14 +55,14 @@ public final class OrnsteinUhlenbeckNoiseStrategy implements InputStrategy {
         this.random = seed == null ? new Random() : new Random(seed);
     }
 
-    public static OrnsteinUhlenbeckNoiseStrategy create(Map<String, Object> params) {
+    public static OrnsteinUhlenbeckNoiseStrategy create(ConfigParams params) {
         return new OrnsteinUhlenbeckNoiseStrategy(
-                ConfigParameterReader.getDouble(params, "base_current", 0.0),
-                ConfigParameterReader.getDouble(params, "noise_std", 0.0),
-                ConfigParameterReader.getDouble(params, "tau_ms", 20.0),
-                ConfigParameterReader.getDouble(params, "neighbor_correlation", 0.0),
-                ConfigParameterReader.getBoolean(params, "allow_negative", false),
-                ConfigParameterReader.getOptionalLong(params, "seed"));
+                params.getDouble("base_current", 0.0),
+                params.getDouble("noise_std", 0.0),
+                params.getDouble("tau_ms", 20.0),
+                params.getDouble("neighbor_correlation", 0.0),
+                params.getBoolean("allow_negative", false),
+                params.getOptionalLong("seed"));
     }
 
     @Override
