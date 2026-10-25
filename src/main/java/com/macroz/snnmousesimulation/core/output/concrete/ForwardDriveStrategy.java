@@ -2,6 +2,7 @@ package com.macroz.snnmousesimulation.core.output.concrete;
 
 import com.macroz.snnmousesimulation.core.output.OutputStrategy;
 import com.macroz.snnmousesimulation.utility.ConfigParams;
+import com.macroz.snnmousesimulation.utility.ParamChecks;
 import com.macroz.snnmousesimulation.world.Agent;
 
 
@@ -13,11 +14,11 @@ public final class ForwardDriveStrategy implements OutputStrategy {
     private final double speedPerSecond;
 
     private ForwardDriveStrategy(double speedPerSecond) {
-        this.speedPerSecond = speedPerSecond;
+        this.speedPerSecond = ParamChecks.nonNegative("speedPerSecond", speedPerSecond);
     }
 
     public static ForwardDriveStrategy create(ConfigParams params) {
-        return new ForwardDriveStrategy(params.getNonNegativeDouble("speedPerSecond", 0.5));
+        return new ForwardDriveStrategy(params.getDouble("speedPerSecond", 0.5));
     }
 
     @Override

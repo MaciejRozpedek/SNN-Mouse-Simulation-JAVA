@@ -32,10 +32,7 @@ public class InputStrategyFactory {
             throw new IllegalArgumentException("Unknown input type: " + inputType + ". Available: " + REGISTRY.keySet());
         }
         try {
-            ConfigParams configParams = new ConfigParams(params);
-            InputStrategy strategy = factory.apply(configParams);
-            configParams.requireNoUnknownKeys();
-            return strategy;
+            return new ConfigParams(params).build(factory);
         } catch (Exception e) {
             throw new AgentConfigurationException(StrategyType.INPUT, inputType, params, e);
         }

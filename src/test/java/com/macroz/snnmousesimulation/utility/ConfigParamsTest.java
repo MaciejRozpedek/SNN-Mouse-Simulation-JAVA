@@ -4,10 +4,10 @@ import com.macroz.snnmousesimulation.exception.SnnParseException;
 import org.junit.jupiter.api.Test;
 
 import java.util.Map;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -28,7 +28,8 @@ class ConfigParamsTest {
     void readsValueWithRequestedType() {
         assertEquals(7.0, withX("7").getDouble("x", 0.0));
         assertEquals(0.001, withX("1e-3").getDouble("x", 0.0));
-        assertEquals(42L, withX("42").getOptionalLong("x"));
+        assertEquals(Optional.of(42L), withX("42").getOptionalLong("x"));
+        assertEquals(Optional.of(42), withX("42").getOptionalInt("x"));
         assertTrue(withX("true").getBoolean("x", false));
     }
 
@@ -36,7 +37,7 @@ class ConfigParamsTest {
     void usesDefaultForMissingOrEmptyValue() {
         assertEquals(1.5, new ConfigParams(Map.of()).getDouble("x", 1.5));
         assertEquals(1.5, withX("~").getDouble("x", 1.5));
-        assertNull(withX("").getOptionalLong("x"));
+        assertTrue(withX("").getOptionalLong("x").isEmpty());
     }
 
     // Values that a lenient parser would silently accept or convert
@@ -44,6 +45,7 @@ class ConfigParamsTest {
     void rejectsInvalidValues() {
         assertThrows(SnnParseException.class, () -> withX("7.9").getOptionalLong("x"));
         assertThrows(SnnParseException.class, () -> withX("99999999999999999999").getOptionalLong("x"));
+        assertThrows(SnnParseException.class, () -> withX("3000000000").getOptionalInt("x"));
         assertThrows(SnnParseException.class, () -> withQuotedX("7").getDouble("x", 0.0));
         assertThrows(SnnParseException.class, () -> withX("7f").getDouble("x", 0.0));
         assertThrows(SnnParseException.class, () -> withX("yes").getBoolean("x", false));
@@ -51,9 +53,14 @@ class ConfigParamsTest {
 
     @Test
     void reportsPositionOfInvalidValue() {
-        SnnParseException e = assertThrows(SnnParseException.class, () -> withX("7.9").getOptionalLong("x"));
+        String position = "line: " + LINE + ", column: " + COLUMN;
 
-        assertTrue(e.getMessage().contains("line: " + LINE + ", column: " + COLUMN), e.getMessage());
+        SnnParseException wrongType = assertThrows(SnnParseException.class, () -> withX("7.9").getOptionalLong("x"));
+        assertTrue(wrongType.getMessage().contains(position), wrongType.getMessage());
+
+        SnnParseException failedCheck = assertThrows(SnnParseException.class,
+                () -> withX("-1").build(params -> ParamChecks.positive("x", params.getDouble("x", 1.0))));
+        assertTrue(failedCheck.getMessage().contains(position), failedCheck.getMessage());
     }
 
     @Test

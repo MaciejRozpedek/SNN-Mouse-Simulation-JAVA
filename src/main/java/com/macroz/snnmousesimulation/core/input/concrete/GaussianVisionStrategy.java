@@ -3,6 +3,7 @@ package com.macroz.snnmousesimulation.core.input.concrete;
 import com.macroz.snnmousesimulation.core.input.InputFrame;
 import com.macroz.snnmousesimulation.core.input.InputStrategy;
 import com.macroz.snnmousesimulation.utility.ConfigParams;
+import com.macroz.snnmousesimulation.utility.ParamChecks;
 import com.macroz.snnmousesimulation.world.AgentView;
 import com.macroz.snnmousesimulation.world.Food;
 
@@ -18,12 +19,9 @@ public class GaussianVisionStrategy implements InputStrategy {
     private final double halfFov;
 
     private GaussianVisionStrategy(double fovDegrees, double range, double overlap_factor, double maxCurrent) {
-        if (fovDegrees <= 0 || range <= 0) {
-            throw new IllegalArgumentException("FOV and range must be positive.");
-        }
-        if (overlap_factor <= 0) {
-            throw new IllegalArgumentException("Overlap factor must be positive.");
-        }
+        ParamChecks.positive("fov", fovDegrees);
+        ParamChecks.positive("range", range);
+        ParamChecks.positive("overlap_factor", overlap_factor);
         this.fovRadians = Math.toRadians(fovDegrees);
         this.halfFov = this.fovRadians / 2.0;
         this.maxRange = range;

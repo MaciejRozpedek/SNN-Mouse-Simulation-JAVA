@@ -2,6 +2,7 @@ package com.macroz.snnmousesimulation.core.output.concrete;
 
 import com.macroz.snnmousesimulation.core.output.OutputStrategy;
 import com.macroz.snnmousesimulation.utility.ConfigParams;
+import com.macroz.snnmousesimulation.utility.ParamChecks;
 import com.macroz.snnmousesimulation.world.Agent;
 
 
@@ -11,11 +12,11 @@ public final class TurnRightStrategy implements OutputStrategy {
     private final double rotationDegreesPerSecond;
 
     private TurnRightStrategy(double rotationDegreesPerSecond) {
-        this.rotationDegreesPerSecond = rotationDegreesPerSecond;
+        this.rotationDegreesPerSecond = ParamChecks.nonNegative("turn_rate", rotationDegreesPerSecond);
     }
 
     public static TurnRightStrategy create(ConfigParams params) {
-        return new TurnRightStrategy(params.getNonNegativeDouble("turn_rate", 0.03));
+        return new TurnRightStrategy(params.getDouble("turn_rate", 0.03));
     }
 
     @Override

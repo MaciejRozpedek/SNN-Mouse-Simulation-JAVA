@@ -34,10 +34,7 @@ public class OutputStrategyFactory {
             throw new IllegalArgumentException("Unknown output type: " + outputType + ". Available: " + REGISTRY.keySet());
         }
         try {
-            ConfigParams configParams = new ConfigParams(params);
-            OutputStrategy strategy = factory.apply(configParams);
-            configParams.requireNoUnknownKeys();
-            return strategy;
+            return new ConfigParams(params).build(factory);
         } catch (Exception e) {
             throw new AgentConfigurationException(StrategyType.OUTPUT, outputType, params, e);
         }

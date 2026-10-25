@@ -3,6 +3,7 @@ package com.macroz.snnmousesimulation.core.input.concrete;
 import com.macroz.snnmousesimulation.core.input.InputFrame;
 import com.macroz.snnmousesimulation.core.input.InputStrategy;
 import com.macroz.snnmousesimulation.utility.ConfigParams;
+import com.macroz.snnmousesimulation.utility.ParamChecks;
 
 import java.util.Random;
 
@@ -17,15 +18,8 @@ public final class TonicNoiseStrategy implements InputStrategy {
     private final Random random;
 
     public TonicNoiseStrategy(double baseCurrent, double noiseStd, boolean allowNegative, Long seed) {
-        if (!Double.isFinite(baseCurrent)) {
-            throw new IllegalArgumentException("Base current must be finite.");
-        }
-        if (!Double.isFinite(noiseStd) || noiseStd < 0) {
-            throw new IllegalArgumentException("Noise standard deviation must be finite and non-negative.");
-        }
-
-        this.baseCurrent = baseCurrent;
-        this.noiseStd = noiseStd;
+        this.baseCurrent = ParamChecks.finite("base_current", baseCurrent);
+        this.noiseStd = ParamChecks.nonNegative("noise_std", noiseStd);
         this.allowNegative = allowNegative;
         this.random = seed == null ? new Random() : new Random(seed);
     }
@@ -35,7 +29,7 @@ public final class TonicNoiseStrategy implements InputStrategy {
                 params.getDouble("base_current", 0.0),
                 params.getDouble("noise_std", 0.0),
                 params.getBoolean("allow_negative", false),
-                params.getOptionalLong("seed"));
+                params.getOptionalLong("seed").orElse(null));
     }
 
     @Override

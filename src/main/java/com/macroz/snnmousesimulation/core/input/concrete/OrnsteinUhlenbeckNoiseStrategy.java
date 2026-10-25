@@ -3,6 +3,7 @@ package com.macroz.snnmousesimulation.core.input.concrete;
 import com.macroz.snnmousesimulation.core.input.InputFrame;
 import com.macroz.snnmousesimulation.core.input.InputStrategy;
 import com.macroz.snnmousesimulation.utility.ConfigParams;
+import com.macroz.snnmousesimulation.utility.ParamChecks;
 
 import java.util.Random;
 
@@ -32,24 +33,11 @@ public final class OrnsteinUhlenbeckNoiseStrategy implements InputStrategy {
             double neighborCorrelation,
             boolean allowNegative,
             Long seed) {
-
-        if (!Double.isFinite(baseCurrent)) {
-            throw new IllegalArgumentException("Base current must be finite.");
-        }
-        if (!Double.isFinite(noiseStd) || noiseStd < 0) {
-            throw new IllegalArgumentException("Noise standard deviation must be finite and non-negative.");
-        }
-        if (!Double.isFinite(tauMs) || tauMs <= 0) {
-            throw new IllegalArgumentException("Tau must be finite and positive.");
-        }
-        if (!Double.isFinite(neighborCorrelation) || neighborCorrelation < 0.0 || neighborCorrelation >= 1.0) {
-            throw new IllegalArgumentException("Neighbor correlation must be in range [0, 1).");
-        }
-
-        this.baseCurrent = baseCurrent;
-        this.noiseStd = noiseStd;
-        this.tauMs = tauMs;
-        this.neighborCorrelation = neighborCorrelation;
+        this.baseCurrent = ParamChecks.finite("base_current", baseCurrent);
+        this.noiseStd = ParamChecks.nonNegative("noise_std", noiseStd);
+        this.tauMs = ParamChecks.positive("tau_ms", tauMs);
+        this.neighborCorrelation = ParamChecks.check("neighbor_correlation", neighborCorrelation,
+                neighborCorrelation >= 0.0 && neighborCorrelation < 1.0, "must be in range [0, 1)");
         this.independentFactor = Math.sqrt(1.0 - neighborCorrelation * neighborCorrelation);
         this.allowNegative = allowNegative;
         this.random = seed == null ? new Random() : new Random(seed);
@@ -62,7 +50,7 @@ public final class OrnsteinUhlenbeckNoiseStrategy implements InputStrategy {
                 params.getDouble("tau_ms", 20.0),
                 params.getDouble("neighbor_correlation", 0.0),
                 params.getBoolean("allow_negative", false),
-                params.getOptionalLong("seed"));
+                params.getOptionalLong("seed").orElse(null));
     }
 
     @Override
