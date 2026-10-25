@@ -28,7 +28,7 @@
 /**
  * @typedef {Object} SnnDiagnosticState
  * @property {number} dopamineLevel
- * @property {number} dopamineBaseLevel
+ * @property {number} dopamineBaseline
  * @property {number} meanFiringRateHz
  * @property {number} totalSpikesSinceLastSnapshot
  * @property {SpikeSample[]} spikeSamples
@@ -351,7 +351,7 @@ function updateSnnTelemetry(world) {
 
     const diag = world.snnDiagnostics;
     elDopamine.innerText = diag.dopamineLevel.toFixed(4);
-    elDopamineBase.innerText = diag.dopamineBaseLevel.toFixed(4);
+    elDopamineBase.innerText = diag.dopamineBaseline.toFixed(4);
     elMeanHz.innerText = diag.meanFiringRateHz.toFixed(2) + ' Hz';
     elSpikesSinceLastSnapshot.innerText = String(diag.totalSpikesSinceLastSnapshot);
     elAvgWeight.innerText = diag.averageWeight.toFixed(2);

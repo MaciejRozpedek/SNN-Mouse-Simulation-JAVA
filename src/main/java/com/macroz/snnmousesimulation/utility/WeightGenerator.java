@@ -1,6 +1,7 @@
 package com.macroz.snnmousesimulation.utility;
 
 import com.macroz.snnmousesimulation.exception.SnnParseException;
+
 import java.util.Random;
 
 public class WeightGenerator {
@@ -42,11 +43,11 @@ public class WeightGenerator {
     }
 
     public double generate() {
-		return switch (type) {
-			case FIXED -> p1;
-			case UNIFORM -> p1 + (p2 - p1) * random.nextDouble();
-			case NORMAL -> p1 + random.nextGaussian() * p2; // mean + N(0,1) * std
-			default -> throw new IllegalStateException("Unknown generation type.");
-		};
+        return switch (type) {
+            case FIXED -> p1;
+            case UNIFORM -> p1 + (p2 - p1) * random.nextDouble();
+            case NORMAL -> p1 + random.nextGaussian() * p2; // mean + N(0,1) * std
+            default -> throw new IllegalStateException("Unknown generation type.");
+        };
     }
 }

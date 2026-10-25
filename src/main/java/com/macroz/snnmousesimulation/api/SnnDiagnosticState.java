@@ -4,7 +4,7 @@ import java.util.List;
 
 public record SnnDiagnosticState(
         double dopamineLevel,
-        double dopamineBaseLevel,
+        double dopamineBaseline,
         double meanFiringRateHz,
         int totalSpikesSinceLastSnapshot,
         List<SpikeSample> spikeSamples,

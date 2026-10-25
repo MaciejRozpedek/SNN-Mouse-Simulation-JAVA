@@ -66,7 +66,7 @@ public class SnnDiagnosticTracker {
 
         return new SnnDiagnosticState(
                 engine.getDopamineLevel(),
-                engine.getDopamineBaseLevel(),
+                engine.getDopamineBaseline(),
                 meanFiringRateHz,
                 totalSpikesSinceLastSnapshot,
                 spikeSamples,

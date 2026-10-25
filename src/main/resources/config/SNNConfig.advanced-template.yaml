@@ -2,7 +2,24 @@
 # This example defines a 3-layer cortical model with sensory-specific sub-regions in Layer1.
 
 # -----------------------------------------------------------------------------
-# 1. Neuron Type Definitions
+# 1. Plasticity
+# -----------------------------------------------------------------------------
+# Defines the parameters of dopamine-modulated STDP.
+plasticity:
+  stdp:
+    tau_plus_ms: 20.0
+    tau_minus_ms: 20.0
+    a_plus: 0.10
+    a_minus: 0.15
+    tau_eligibility_ms: 476.0
+    max_weight: 50.0
+  dopamine:
+    tau_ms: 50.0
+    tau_baseline_ms: 7000.0
+    initial_baseline: -0.0004
+
+# -----------------------------------------------------------------------------
+# 2. Neuron Type Definitions
 # -----------------------------------------------------------------------------
 # Defines the biophysical parameters for each type of neuron used in the model.
 neuron_types:
@@ -22,7 +39,7 @@ neuron_types:
     u0: -14.0
 
 # -----------------------------------------------------------------------------
-# 2. Group Hierarchy
+# 3. Group Hierarchy
 # -----------------------------------------------------------------------------
 # Defines the network structure. Layer1 is split into two sensory modalities.
 groups:
@@ -56,7 +73,7 @@ groups:
             count: 25
 
 # -----------------------------------------------------------------------------
-# 3. Connection Rules
+# 4. Connection Rules
 # -----------------------------------------------------------------------------
 # A list of rules that create synapses between neuron groups.
 

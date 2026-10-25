@@ -2,7 +2,24 @@
 # This example defines a simple 3-layer cortical model.
 
 # -----------------------------------------------------------------------------
-# 1. Neuron Type Definitions
+# 1. Plasticity
+# -----------------------------------------------------------------------------
+# Defines the parameters of dopamine-modulated STDP.
+plasticity:
+  stdp:
+    tau_plus_ms: 20.0
+    tau_minus_ms: 20.0
+    a_plus: 0.10
+    a_minus: 0.15
+    tau_eligibility_ms: 476.0
+    max_weight: 50.0
+  dopamine:
+    tau_ms: 50.0
+    tau_baseline_ms: 7000.0
+    initial_baseline: -0.0004
+
+# -----------------------------------------------------------------------------
+# 2. Neuron Type Definitions
 # -----------------------------------------------------------------------------
 # Defines the biophysical parameters for each type of neuron used in the model.
 neuron_types:
@@ -22,7 +39,7 @@ neuron_types:
     u0: -14.0
 
 # -----------------------------------------------------------------------------
-# 2. Group Hierarchy
+# 3. Group Hierarchy
 # -----------------------------------------------------------------------------
 # Defines the structure of the network, with nested groups forming layers.
 groups:
@@ -48,7 +65,7 @@ groups:
             count: 20
 
 # -----------------------------------------------------------------------------
-# 3. Input Definitions
+# 4. Input Definitions
 # -----------------------------------------------------------------------------
 # Defines external inputs to specific neuron groups.
 inputs:
@@ -63,7 +80,7 @@ inputs:
       max_current: 10.0
 
 # -----------------------------------------------------------------------------
-# 4. Output Definitions
+# 5. Output Definitions
 # -----------------------------------------------------------------------------
 # Defines outputs from specific neuron groups.
 outputs:
@@ -72,11 +89,11 @@ outputs:
     source_group: Cortex.Layer3  # Uses the whole Layer3 group
     source_type: RS              # Only looks at RS neurons in that layer
     params:
-      speed: 2.0
-      turn_rate: 90.0
+      speed: 1000.0
+      turn_rate: 360.0
 
 # -----------------------------------------------------------------------------
-# 5. Connection Rules
+# 6. Connection Rules
 # -----------------------------------------------------------------------------
 # A list of rules that create synapses between neuron groups.
 connections:

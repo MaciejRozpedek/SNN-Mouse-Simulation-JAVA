@@ -7,13 +7,14 @@ import java.util.List;
 
 public record SnnNetworkData(
     List<IzhikevichParams> neuronParamTypes,
-    int[] neuronToTypeId,      // Map: neuronIndex -> paramTypeIndex
-    double[] initialV,         // Initial membrane potential
-    double[] initialU,         // Initial recovery variable
-    int[][] synapticTargets,   // Adjacency list: source -> [targets]
-    double[][] synapticWeights,// Weights matching the targets
+    int[] neuronToTypeId,         // Map: neuronIndex -> paramTypeIndex
+    double[] initialV,            // Initial membrane potential
+    double[] initialU,            // Initial recovery variable
+    int[][] synapticTargets,      // Adjacency list: source -> [targets]
+    double[][] synapticWeights,   // Weights matching the targets
+    PlasticityParams plasticity,  // STDP and dopamine parameters
 
-	// Agent data
-	List<InputConfig> inputConfigs,
-	List<OutputConfig> outputConfigs
+    // Agent data
+    List<InputConfig> inputConfigs,
+    List<OutputConfig> outputConfigs
 ) {}

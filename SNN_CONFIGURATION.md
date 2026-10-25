@@ -1,6 +1,41 @@
 # Configuration File Schema
 
-This document describes the configuration format for defining a neural network model. It is organized into five main sections: `neuron_types`, `groups`, `inputs`, `outputs`, and `connections`.
+This document describes the configuration format for defining a neural network model. It is organized into six main sections: `plasticity`, `neuron_types`, `groups`, `inputs`, `outputs`, and `connections`.
+
+## `plasticity`
+
+This section defines the parameters of dopamine-modulated STDP. All parameters are required.
+
+### Structure
+
+```yaml
+plasticity:
+  stdp:
+    tau_plus_ms: <double>
+    tau_minus_ms: <double>
+    a_plus: <double>
+    a_minus: <double>
+    tau_eligibility_ms: <double>
+    max_weight: <double>
+  dopamine:
+    tau_ms: <double>
+    tau_baseline_ms: <double>
+    initial_baseline: <double>
+```
+
+### Parameters
+
+*   `stdp`:
+    *   `tau_plus_ms` (`<double>`): Time constant of the presynaptic trace in milliseconds (must be positive).
+    *   `tau_minus_ms` (`<double>`): Time constant of the postsynaptic trace in milliseconds (must be positive).
+    *   `a_plus` (`<double>`): Potentiation amplitude (must be non-negative).
+    *   `a_minus` (`<double>`): Depression amplitude (must be non-negative).
+    *   `tau_eligibility_ms` (`<double>`): Time constant of the synaptic eligibility trace in milliseconds (must be positive).
+    *   `max_weight` (`<double>`): Maximum synaptic weight (must be positive).
+*   `dopamine`:
+    *   `tau_ms` (`<double>`): Decay time constant of the dopamine level in milliseconds (must be positive).
+    *   `tau_baseline_ms` (`<double>`): Time constant of the dopamine baseline in milliseconds (must be positive). Weights change by the difference between the dopamine level and its baseline.
+    *   `initial_baseline` (`<double>`): Initial value of the dopamine baseline.
 
 ## `neuron_types`
 

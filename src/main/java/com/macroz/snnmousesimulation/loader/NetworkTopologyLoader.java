@@ -1,12 +1,14 @@
 package com.macroz.snnmousesimulation.loader;
 
 import com.macroz.snnmousesimulation.core.IzhikevichParams;
+import com.macroz.snnmousesimulation.core.PlasticityParams;
 import com.macroz.snnmousesimulation.core.SnnNetworkData;
 import com.macroz.snnmousesimulation.core.input.InputConfig;
 import com.macroz.snnmousesimulation.core.output.OutputConfig;
 import com.macroz.snnmousesimulation.exception.SnnParseException;
 import com.macroz.snnmousesimulation.loader.structure.GroupInfo;
 import com.macroz.snnmousesimulation.loader.structure.NeuronInfo;
+import com.macroz.snnmousesimulation.utility.ConfigParams;
 import com.macroz.snnmousesimulation.utility.ConfigValue;
 import com.macroz.snnmousesimulation.utility.WeightGenerator;
 import org.yaml.snakeyaml.Yaml;
@@ -20,6 +22,7 @@ import java.util.*;
 
 public class NetworkTopologyLoader {
 
+    private PlasticityParams plasticity;
     private final List<IzhikevichParams> neuronParamTypes = new ArrayList<>();
     private final Map<String, Integer> neuronTypeToIdMap = new HashMap<>();
     private final List<Integer> globalNeuronTypeIds = new ArrayList<>();
@@ -39,7 +42,8 @@ public class NetworkTopologyLoader {
     private final List<InputConfig> inputConfigs = new ArrayList<>();
     private final List<OutputConfig> outputConfigs = new ArrayList<>();
 
-    public record GroupPair(GroupInfo from, GroupInfo to) {}
+    public record GroupPair(GroupInfo from, GroupInfo to) {
+    }
 
     public SnnNetworkData load(InputStream inputStream) {
         Yaml yaml = new Yaml();
@@ -48,6 +52,7 @@ public class NetworkTopologyLoader {
         if (root == null) throw new SnnParseException("Empty YAML file.");
         if (!(root instanceof MappingNode)) throw new SnnParseException("Root must be a mapping.", root.getStartMark());
 
+        plasticity = loadPlasticity(getChildNodeRequired(root, "plasticity"));
         loadNeuronTypes(getChildNodeRequired(root, "neuron_types"));
 
         rootGroup = new GroupInfo();
@@ -101,6 +106,7 @@ public class NetworkTopologyLoader {
                 uArr,
                 targetsArr,
                 weightsArr,
+                plasticity,
                 new ArrayList<>(inputConfigs),
                 new ArrayList<>(outputConfigs)
         );
@@ -173,17 +179,21 @@ public class NetworkTopologyLoader {
         }
     }
 
-    // Values are kept raw; strategies convert them to the types they expect
     private Map<String, ConfigValue> loadParams(Node parentNode) {
-        Map<String, ConfigValue> params = new LinkedHashMap<>();
         Node paramsNode = getChildNode(parentNode, "params");
         if (paramsNode == null || Tag.NULL.equals(paramsNode.getTag())) {
-            return params;
+            return Map.of();
         }
-        if (!(paramsNode instanceof MappingNode mappingNode)) {
-            throw new SnnParseException("'params' must be a map.", paramsNode.getStartMark());
+        return loadValues(paramsNode, "params");
+    }
+
+    // Values are kept raw; their users convert them to the types they expect
+    private Map<String, ConfigValue> loadValues(Node node, String sectionName) {
+        if (!(node instanceof MappingNode mappingNode)) {
+            throw new SnnParseException("'" + sectionName + "' must be a map.", node.getStartMark());
         }
 
+        Map<String, ConfigValue> params = new LinkedHashMap<>();
         for (NodeTuple tuple : mappingNode.getValue()) {
             String name = nodeAs(tuple.getKeyNode(), String.class);
             if (!(tuple.getValueNode() instanceof ScalarNode valueNode)) {
@@ -196,6 +206,33 @@ public class NetworkTopologyLoader {
             params.put(name, new ConfigValue(valueNode.getValue(), !valueNode.isPlain(), mark.getLine() + 1, mark.getColumn() + 1));
         }
         return Collections.unmodifiableMap(params);
+    }
+
+    private PlasticityParams loadPlasticity(Node node) {
+        if (!(node instanceof MappingNode)) {
+            throw new SnnParseException("section 'plasticity' must be a map.", node.getStartMark());
+        }
+
+        Node stdpNode = getChildNodeRequired(node, "stdp");
+        Mark stdpMark = stdpNode.getStartMark();
+        ConfigParams stdpParams = new ConfigParams(loadValues(stdpNode, "stdp"), stdpMark.getLine() + 1, stdpMark.getColumn() + 1);
+        PlasticityParams.Stdp stdp = stdpParams.build(params -> new PlasticityParams.Stdp(
+                params.getRequiredDouble("tau_plus_ms"),
+                params.getRequiredDouble("tau_minus_ms"),
+                params.getRequiredDouble("a_plus"),
+                params.getRequiredDouble("a_minus"),
+                params.getRequiredDouble("tau_eligibility_ms"),
+                params.getRequiredDouble("max_weight")));
+
+        Node dopamineNode = getChildNodeRequired(node, "dopamine");
+        Mark dopamineMark = dopamineNode.getStartMark();
+        ConfigParams dopamineParams = new ConfigParams(loadValues(dopamineNode, "dopamine"), dopamineMark.getLine() + 1, dopamineMark.getColumn() + 1);
+        PlasticityParams.Dopamine dopamine = dopamineParams.build(params -> new PlasticityParams.Dopamine(
+                params.getRequiredDouble("tau_ms"),
+                params.getRequiredDouble("tau_baseline_ms"),
+                params.getRequiredDouble("initial_baseline")));
+
+        return new PlasticityParams(stdp, dopamine);
     }
 
     private void loadNeuronTypes(Node node) {

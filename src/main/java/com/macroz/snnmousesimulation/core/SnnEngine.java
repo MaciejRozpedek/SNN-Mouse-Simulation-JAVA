@@ -8,21 +8,21 @@ import java.util.List;
 
 public class SnnEngine {
 
-    // STDP Constants
-    private static final double TAU_PLUS = 20.0;
-    private static final double TAU_MINUS = 20.0;
-    private static final double A_PLUS = 0.10;
-    private static final double A_MINUS = 0.15;
-    private static final double MAX_WEIGHT = 50.0;
+    // STDP
+    private final double tauPlus;
+    private final double tauMinus;
+    private final double aPlus;
+    private final double aMinus;
+    private final double tauEligibility;
+    private final double maxWeight;
 
     // dopamine
-    private static final double TAU_C = 476.0;
-    private static final double TAU_D = 50.0;
-    private static final double TAU_BASE_D = 7000.0;
+    private final double tauDopamine;
+    private final double tauDopamineBaseline;
     @Getter
     private double dopamineLevel = 0.0;
     @Getter
-    private double dopamineBaseLevel = -0.0004;
+    private double dopamineBaseline;
     private final double[][] eligibilityTraces;
 
     @Getter
@@ -47,6 +47,19 @@ public class SnnEngine {
     private int stepCount = 0;
 
     public SnnEngine(SnnNetworkData data) {
+        PlasticityParams.Stdp stdp = data.plasticity().stdp();
+        this.tauPlus = stdp.tauPlusMs();
+        this.tauMinus = stdp.tauMinusMs();
+        this.aPlus = stdp.aPlus();
+        this.aMinus = stdp.aMinus();
+        this.tauEligibility = stdp.tauEligibilityMs();
+        this.maxWeight = stdp.maxWeight();
+
+        PlasticityParams.Dopamine dopamine = data.plasticity().dopamine();
+        this.tauDopamine = dopamine.tauMs();
+        this.tauDopamineBaseline = dopamine.tauBaselineMs();
+        this.dopamineBaseline = dopamine.initialBaseline();
+
         this.totalNeuronCount = data.neuronToTypeId().length;
         this.neuronParamTypes = data.neuronParamTypes();
         this.neuronToTypeId = data.neuronToTypeId();
@@ -150,8 +163,8 @@ public class SnnEngine {
     }
 
     private void updateSynapticTraces(double dt) {
-        double decayPre = Math.exp(-dt / TAU_PLUS);
-        double decayPost = Math.exp(-dt / TAU_MINUS);
+        double decayPre = Math.exp(-dt / tauPlus);
+        double decayPost = Math.exp(-dt / tauMinus);
 
         for (int i = 0; i < totalNeuronCount; i++) {
             presynapticTrace[i] *= decayPre;
@@ -160,9 +173,9 @@ public class SnnEngine {
     }
 
     private void updateWeightsAndTraces(double dt) {
-        double decayTrace = Math.exp(-dt / TAU_C);
+        double decayTrace = Math.exp(-dt / tauEligibility);
 
-        double dopamineSignal = dopamineLevel - dopamineBaseLevel;
+        double dopamineSignal = dopamineLevel - dopamineBaseline;
 
         boolean isDopamineActive = Math.abs(dopamineSignal) > 1e-6;
 
@@ -180,7 +193,7 @@ public class SnnEngine {
                     double weightChange = traces[k] * dopamineSignal * dt;
                     if (weightChange != 0) {
                         weights[k] += weightChange;
-                        if (weights[k] > MAX_WEIGHT) weights[k] = MAX_WEIGHT;
+                        if (weights[k] > maxWeight) weights[k] = maxWeight;
                         if (weights[k] < 0) weights[k] = 0;
                     }
                     traces[k] *= decayTrace;
@@ -192,10 +205,10 @@ public class SnnEngine {
             }
         }
 
-        double alphaBase = 1.0 - Math.exp(-dt / TAU_BASE_D);
-        dopamineBaseLevel += (dopamineLevel - dopamineBaseLevel) * alphaBase;
+        double alphaBase = 1.0 - Math.exp(-dt / tauDopamineBaseline);
+        dopamineBaseline += (dopamineLevel - dopamineBaseline) * alphaBase;
 
-        double decayDopamine = Math.exp(-dt / TAU_D);
+        double decayDopamine = Math.exp(-dt / tauDopamine);
         dopamineLevel *= decayDopamine;
     }
 
@@ -207,7 +220,7 @@ public class SnnEngine {
             for (int i = 0; i < sources.length; i++) {
                 int preNeuron = sources[i];
                 int k = sourceIndices[i];
-                double deltaW = A_PLUS * presynapticTrace[preNeuron];
+                double deltaW = aPlus * presynapticTrace[preNeuron];
                 eligibilityTraces[preNeuron][k] += deltaW;
             }
 
@@ -215,7 +228,7 @@ public class SnnEngine {
             int[] targets = synapticTargets[firedNeuron];
             for (int k = 0; k < targets.length; k++) {
                 int postNeuron = targets[k];
-                double deltaW = -A_MINUS * postsynapticTrace[postNeuron];
+                double deltaW = -aMinus * postsynapticTrace[postNeuron];
                 eligibilityTraces[firedNeuron][k] += deltaW;
             }
         }
