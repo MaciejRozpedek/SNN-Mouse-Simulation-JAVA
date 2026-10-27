@@ -7,13 +7,10 @@ import com.macroz.snnmousesimulation.core.SnnEngine;
 import com.macroz.snnmousesimulation.core.SnnNetworkData;
 import com.macroz.snnmousesimulation.core.input.InputConfig;
 import com.macroz.snnmousesimulation.core.input.InputFrame;
-import com.macroz.snnmousesimulation.core.input.InputStrategy;
-import com.macroz.snnmousesimulation.core.input.InputStrategyFactory;
 import com.macroz.snnmousesimulation.core.input.InputSystem;
 import com.macroz.snnmousesimulation.core.output.OutputConfig;
-import com.macroz.snnmousesimulation.core.output.OutputStrategy;
-import com.macroz.snnmousesimulation.core.output.OutputStrategyFactory;
 import com.macroz.snnmousesimulation.core.output.OutputSystem;
+import com.macroz.snnmousesimulation.registry.Registries;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -48,18 +45,14 @@ public class Agent {
         this.inputSystem = new InputSystem();
         this.outputSystem = new OutputSystem();
 
-        if (data.inputConfigs() != null) {
-            for (InputConfig config : data.inputConfigs()) {
-                InputStrategy strategy = InputStrategyFactory.create(config.sensorType(), config.params());
-                inputSystem.addInput(config.targetNeuronIndices(), strategy);
-            }
+        for (InputConfig config : data.inputConfigs()) {
+            inputSystem.addInput(config.targetNeuronIndices(),
+                    Registries.INPUTS.create(config.sensorType(), config.params()));
         }
 
-        if (data.outputConfigs() != null) {
-            for (OutputConfig config : data.outputConfigs()) {
-                OutputStrategy strategy = OutputStrategyFactory.create(config.outputType(), config.params());
-                outputSystem.addOutput(config.sourceNeuronIndices(), strategy);
-            }
+        for (OutputConfig config : data.outputConfigs()) {
+            outputSystem.addOutput(config.sourceNeuronIndices(),
+                    Registries.OUTPUTS.create(config.outputType(), config.params()));
         }
     }
 
