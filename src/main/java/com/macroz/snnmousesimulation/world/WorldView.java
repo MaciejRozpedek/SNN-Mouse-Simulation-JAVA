@@ -12,7 +12,7 @@ public final class WorldView {
     }
 
     public static WorldView from(World world) {
-        return new WorldView(world.getFood());
+        return new WorldView(world.food());
     }
 
     public List<Food> food() {

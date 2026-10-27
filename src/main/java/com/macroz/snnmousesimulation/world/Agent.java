@@ -14,13 +14,15 @@ import com.macroz.snnmousesimulation.core.reaction.ReactionConfig;
 import com.macroz.snnmousesimulation.core.reaction.ReactionSystem;
 import com.macroz.snnmousesimulation.registry.Registries;
 
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Getter
-public class Agent implements AgentEffects {
+public class Agent implements AgentBody, AgentEffects {
     @Setter
     private double x;
     @Setter
@@ -38,6 +40,8 @@ public class Agent implements AgentEffects {
     private final OutputSystem outputSystem;
     @JsonIgnore
     private final ReactionSystem reactionSystem;
+    @Getter(AccessLevel.NONE)
+    private final List<AgentEvent> pendingEvents = new ArrayList<>();
 
     public Agent(double startX, double startY, SnnNetworkData data) {
         this.x = startX;
@@ -82,6 +86,18 @@ public class Agent implements AgentEffects {
 
         // 4. RESPONSE - Interpret outputs and act
         outputSystem.processOutputs(this, firedIndices, frame.deltaTimeMs());
+    }
+
+    @Override
+    public void postEvent(AgentEvent event) {
+        pendingEvents.add(event);
+    }
+
+    // Returns the events posted since the last call
+    public List<AgentEvent> drainEvents() {
+        List<AgentEvent> events = List.copyOf(pendingEvents);
+        pendingEvents.clear();
+        return events;
     }
 
     public SnnDiagnosticState getSnnDiagnostics() {
