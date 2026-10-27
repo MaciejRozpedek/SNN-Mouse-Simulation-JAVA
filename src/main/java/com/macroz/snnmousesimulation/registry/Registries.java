@@ -14,6 +14,9 @@ import com.macroz.snnmousesimulation.core.reaction.concrete.InjectDopamineReacti
 import com.macroz.snnmousesimulation.exception.AgentConfigurationException.StrategyType;
 import com.macroz.snnmousesimulation.world.BoundaryHit;
 import com.macroz.snnmousesimulation.world.FoodEaten;
+import com.macroz.snnmousesimulation.world.rule.WorldRule;
+import com.macroz.snnmousesimulation.world.rule.concrete.BounceBoundaryRule;
+import com.macroz.snnmousesimulation.world.rule.concrete.FoodRule;
 
 /**
  * All extension points of the simulation. Built-in types are registered here; custom types
@@ -25,6 +28,7 @@ public final class Registries {
     public static final StrategyRegistry<InputStrategy> INPUTS = new StrategyRegistry<>(StrategyType.INPUT);
     public static final StrategyRegistry<OutputStrategy> OUTPUTS = new StrategyRegistry<>(StrategyType.OUTPUT);
     public static final StrategyRegistry<ReactionStrategy<?>> REACTIONS = new StrategyRegistry<>(StrategyType.REACTION);
+    public static final StrategyRegistry<WorldRule> WORLD_RULES = new StrategyRegistry<>(StrategyType.WORLD_RULE);
 
     static {
         EVENTS.register("FOOD_EATEN", FoodEaten.class);
@@ -40,6 +44,9 @@ public final class Registries {
         OUTPUTS.register("TURN_RIGHT", TurnRightStrategy::create);
 
         REACTIONS.register("INJECT_DOPAMINE", InjectDopamineReaction::create);
+
+        WORLD_RULES.register("BOUNCE_BOUNDARY", BounceBoundaryRule::create);
+        WORLD_RULES.register("FOOD", FoodRule::create);
     }
 
     private Registries() {

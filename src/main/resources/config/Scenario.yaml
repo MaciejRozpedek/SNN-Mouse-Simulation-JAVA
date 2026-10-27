@@ -1,0 +1,36 @@
+# Scenario File
+# Defines the world, its rules and the agents living in it.
+
+# -----------------------------------------------------------------------------
+# 1. World
+# -----------------------------------------------------------------------------
+world:
+  width: 1000
+  height: 800
+
+# -----------------------------------------------------------------------------
+# 2. World Rules
+# -----------------------------------------------------------------------------
+# Mechanics of the world, applied in this order after all agents have acted.
+rules:
+  - name: Walls
+    rule_type: BOUNCE_BOUNDARY
+
+  - name: Food
+    rule_type: FOOD
+    params:
+      count: 100
+      eat_radius: 30.0
+
+# -----------------------------------------------------------------------------
+# 3. Agents
+# -----------------------------------------------------------------------------
+# Each agent is controlled by the network defined in its brain file
+# (path relative to this file). Only one agent is supported for now.
+agents:
+  - name: Mouse
+    brain: SNNConfig.yaml
+    start:
+      x: 500
+      y: 400
+      angle: 0

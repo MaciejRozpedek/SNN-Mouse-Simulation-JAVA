@@ -21,6 +21,13 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
+import static com.macroz.snnmousesimulation.loader.YamlNodes.configValue;
+import static com.macroz.snnmousesimulation.loader.YamlNodes.getChildNode;
+import static com.macroz.snnmousesimulation.loader.YamlNodes.getChildNodeRequired;
+import static com.macroz.snnmousesimulation.loader.YamlNodes.loadParams;
+import static com.macroz.snnmousesimulation.loader.YamlNodes.loadValues;
+import static com.macroz.snnmousesimulation.loader.YamlNodes.nodeAs;
+
 public class NetworkTopologyLoader {
 
     private PlasticityParams plasticity;
@@ -185,43 +192,6 @@ public class NetworkTopologyLoader {
                     params
             ));
         }
-    }
-
-    private Map<String, ConfigValue> loadParams(Node parentNode) {
-        Node paramsNode = getChildNode(parentNode, "params");
-        if (paramsNode == null || Tag.NULL.equals(paramsNode.getTag())) {
-            return Map.of();
-        }
-        return loadValues(paramsNode, "params");
-    }
-
-    // Values are kept raw; their users convert them to the types they expect
-    private Map<String, ConfigValue> loadValues(Node node, String sectionName) {
-        if (!(node instanceof MappingNode mappingNode)) {
-            throw new SnnParseException("'" + sectionName + "' must be a map.", node.getStartMark());
-        }
-
-        Map<String, ConfigValue> params = new LinkedHashMap<>();
-        for (NodeTuple tuple : mappingNode.getValue()) {
-            String name = nodeAs(tuple.getKeyNode(), String.class);
-            if (!(tuple.getValueNode() instanceof ScalarNode valueNode)) {
-                throw new SnnParseException("Parameter '" + name + "' must be a single value.", tuple.getValueNode().getStartMark());
-            }
-            if (params.containsKey(name)) {
-                throw new SnnParseException("Duplicate parameter '" + name + "'.", tuple.getKeyNode().getStartMark());
-            }
-            params.put(name, configValue(valueNode));
-        }
-        return Collections.unmodifiableMap(params);
-    }
-
-    // Raw value with its position; its user converts it to the type it expects
-    private ConfigValue configValue(Node node) {
-        if (!(node instanceof ScalarNode scalarNode)) {
-            throw new SnnParseException("Expected scalar value.", node.getStartMark());
-        }
-        Mark mark = scalarNode.getStartMark();
-        return new ConfigValue(scalarNode.getValue(), !scalarNode.isPlain(), mark.getLine() + 1, mark.getColumn() + 1);
     }
 
     private void loadReactions(Node node) {
@@ -646,44 +616,5 @@ public class NetworkTopologyLoader {
 
     private int getWildcardNumber(String segment) {
         return Integer.parseInt(segment.substring(1, segment.length() - 1));
-    }
-
-    private Node getChildNode(Node parent, String key) {
-        if (!(parent instanceof MappingNode mappingNode)) {
-            return null;
-        }
-        for (NodeTuple tuple : mappingNode.getValue()) {
-            if (tuple.getKeyNode() instanceof ScalarNode keyNode) {
-                if (keyNode.getValue().equals(key)) {
-                    return tuple.getValueNode();
-                }
-            }
-        }
-        return null;
-    }
-
-    private Node getChildNodeRequired(Node parent, String key) {
-        Node child = getChildNode(parent, key);
-        if (child == null) {
-            throw new SnnParseException("Missing required key '" + key + "'.", parent.getStartMark());
-        }
-        return child;
-    }
-
-    @SuppressWarnings("unchecked")
-    private <T> T nodeAs(Node node, Class<T> clazz) {
-        if (!(node instanceof ScalarNode scalarNode)) {
-            throw new SnnParseException("Expected scalar value.", node.getStartMark());
-        }
-        String value = scalarNode.getValue();
-        try {
-            if (clazz == Double.class) return (T) Double.valueOf(value);
-            if (clazz == Integer.class) return (T) Integer.valueOf(value);
-            if (clazz == String.class) return (T) value;
-            if (clazz == Boolean.class) return (T) Boolean.valueOf(value);
-        } catch (NumberFormatException e) {
-            throw new SnnParseException("Invalid format for type " + clazz.getSimpleName() + ": " + value, node.getStartMark());
-        }
-        throw new IllegalArgumentException("Unsupported type: " + clazz);
     }
 }

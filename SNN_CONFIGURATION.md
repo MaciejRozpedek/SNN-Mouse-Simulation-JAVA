@@ -1,6 +1,6 @@
 # Configuration File Schema
 
-This document describes the configuration format for defining a neural network model. It is organized into seven main sections: `plasticity`, `neuron_types`, `groups`, `inputs`, `outputs`, `reactions`, and `connections`.
+This document describes the configuration format for defining a neural network model (the brain of an agent). It is organized into seven main sections: `plasticity`, `neuron_types`, `groups`, `inputs`, `outputs`, `reactions`, and `connections`. The world and the agents using this network are defined in a scenario file, see [`SCENARIO_CONFIGURATION.md`](SCENARIO_CONFIGURATION.md).
 
 ## `plasticity`
 

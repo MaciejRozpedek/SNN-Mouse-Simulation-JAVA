@@ -43,10 +43,10 @@ public class Agent implements AgentBody, AgentEffects {
     @Getter(AccessLevel.NONE)
     private final List<AgentEvent> pendingEvents = new ArrayList<>();
 
-    public Agent(double startX, double startY, SnnNetworkData data) {
+    public Agent(double startX, double startY, double startAngle, SnnNetworkData data) {
         this.x = startX;
         this.y = startY;
-        this.angle = 0;
+        this.angle = startAngle;
         // SNN initialization
         this.engine = new SnnEngine(data);
         this.diagnosticTracker = new SnnDiagnosticTracker(engine);

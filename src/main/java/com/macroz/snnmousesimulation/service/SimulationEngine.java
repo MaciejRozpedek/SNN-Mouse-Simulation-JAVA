@@ -1,7 +1,7 @@
 package com.macroz.snnmousesimulation.service;
 
 import com.macroz.snnmousesimulation.api.SimulationState;
-import com.macroz.snnmousesimulation.loader.SnnConfigProvider;
+import com.macroz.snnmousesimulation.loader.ScenarioProvider;
 import com.macroz.snnmousesimulation.world.World;
 import jakarta.annotation.PreDestroy;
 import org.springframework.stereotype.Service;
@@ -13,7 +13,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 @Service
 public class SimulationEngine {
-    private final SnnConfigProvider snnConfigProvider;
+    private final ScenarioProvider scenarioProvider;
     private static final double TICK_RATE_MS = 1;
     private static final int SSE_BROADCAST_FPS = 60;
     private static final long SSE_BROADCAST_INTERVAL_NS = 1_000_000_000L / SSE_BROADCAST_FPS;
@@ -27,9 +27,9 @@ public class SimulationEngine {
     private World world;
     private final List<SseEmitter> emitters = new CopyOnWriteArrayList<>();
 
-    public SimulationEngine(SnnConfigProvider snnConfigProvider) {
-        this.snnConfigProvider = snnConfigProvider;
-        this.world = new World(1000, 800, 100, snnConfigProvider.loadConfig());
+    public SimulationEngine(ScenarioProvider scenarioProvider) {
+        this.scenarioProvider = scenarioProvider;
+        this.world = new World(scenarioProvider.loadScenario());
     }
 
     public void setSpeedMultiplier(double multiplier) {
@@ -58,7 +58,7 @@ public class SimulationEngine {
     public synchronized void reloadSimulation() {
         stopSimulationLocked();
         synchronized (worldLock) {
-            this.world = new World(1000, 800, 100, snnConfigProvider.loadConfig());
+            this.world = new World(scenarioProvider.loadScenario());
         }
     }
 

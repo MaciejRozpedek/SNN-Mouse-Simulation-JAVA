@@ -1,10 +1,8 @@
 package com.macroz.snnmousesimulation.world;
 
-import com.macroz.snnmousesimulation.core.SnnNetworkData;
 import com.macroz.snnmousesimulation.core.input.InputFrame;
+import com.macroz.snnmousesimulation.registry.Registries;
 import com.macroz.snnmousesimulation.world.rule.WorldRule;
-import com.macroz.snnmousesimulation.world.rule.concrete.BounceBoundaryRule;
-import com.macroz.snnmousesimulation.world.rule.concrete.FoodRule;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,12 +19,16 @@ public class World implements WorldState {
     private final WorldView worldView;
     private final Random random = new Random();
 
-    public World(double width, double height, int numberOfFood, SnnNetworkData snnNetworkData) {
-        this.width = width;
-        this.height = height;
+    public World(ScenarioData scenario) {
+        this.width = scenario.world().width();
+        this.height = scenario.world().height();
         this.worldView = WorldView.from(this);
-        this.agents = List.of(new Agent(width / 2, height / 2, snnNetworkData));
-        this.rules = List.of(new BounceBoundaryRule(), new FoodRule(numberOfFood, 30.0));
+        this.agents = scenario.agents().stream()
+                .map(agent -> new Agent(agent.startX(), agent.startY(), agent.startAngle(), agent.brain()))
+                .toList();
+        this.rules = scenario.rules().stream()
+                .map(rule -> Registries.WORLD_RULES.create(rule.ruleType(), rule.params()))
+                .toList();
 
         for (WorldRule rule : rules) {
             rule.initialize(this);

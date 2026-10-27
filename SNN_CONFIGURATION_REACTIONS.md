@@ -12,7 +12,8 @@ concrete reaction types accepted by the `reaction_type` property in the
 
 ## Events
 
-Events are posted to an agent by the world.
+Events are posted to an agent by world rules (see
+[`SCENARIO_CONFIGURATION.md`](SCENARIO_CONFIGURATION.md)).
 
 - `FOOD_EATEN` - the agent ate food.
 - `BOUNDARY_HIT` - the agent hit the world boundary; carries the side of the boundary.
