@@ -93,7 +93,18 @@ outputs:
       turn_rate: 360.0
 
 # -----------------------------------------------------------------------------
-# 6. Connection Rules
+# 6. Reaction Definitions
+# -----------------------------------------------------------------------------
+# Defines how the agent reacts to events, e.g. by injecting dopamine.
+reactions:
+  - name: FoodReward
+    event: FOOD_EATEN
+    reaction_type: INJECT_DOPAMINE
+    params:
+      amount: 5.0
+
+# -----------------------------------------------------------------------------
+# 7. Connection Rules
 # -----------------------------------------------------------------------------
 # A list of rules that create synapses between neuron groups.
 connections:

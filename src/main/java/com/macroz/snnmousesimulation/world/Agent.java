@@ -10,6 +10,8 @@ import com.macroz.snnmousesimulation.core.input.InputFrame;
 import com.macroz.snnmousesimulation.core.input.InputSystem;
 import com.macroz.snnmousesimulation.core.output.OutputConfig;
 import com.macroz.snnmousesimulation.core.output.OutputSystem;
+import com.macroz.snnmousesimulation.core.reaction.ReactionConfig;
+import com.macroz.snnmousesimulation.core.reaction.ReactionSystem;
 import com.macroz.snnmousesimulation.registry.Registries;
 
 import lombok.Getter;
@@ -34,6 +36,8 @@ public class Agent implements AgentEffects {
     private final InputSystem inputSystem;
     @JsonIgnore
     private final OutputSystem outputSystem;
+    @JsonIgnore
+    private final ReactionSystem reactionSystem;
 
     public Agent(double startX, double startY, SnnNetworkData data) {
         this.x = startX;
@@ -44,6 +48,7 @@ public class Agent implements AgentEffects {
         this.diagnosticTracker = new SnnDiagnosticTracker(engine);
         this.inputSystem = new InputSystem();
         this.outputSystem = new OutputSystem();
+        this.reactionSystem = new ReactionSystem();
 
         for (InputConfig config : data.inputConfigs()) {
             inputSystem.addInput(config.targetNeuronIndices(),
@@ -54,29 +59,33 @@ public class Agent implements AgentEffects {
             outputSystem.addOutput(config.sourceNeuronIndices(),
                     Registries.OUTPUTS.create(config.outputType(), config.params()));
         }
+
+        for (ReactionConfig config : data.reactionConfigs()) {
+            reactionSystem.addReaction(config.name(), Registries.EVENTS.resolve(config.event()),
+                    Registries.REACTIONS.create(config.reactionType(), config.params()));
+        }
     }
 
     public void update(InputFrame frame) {
-        // 1. SENSORS - Get sensory inputs and convert to currents
+        // 1. EVENTS - React to events from the previous step
+        reactionSystem.processEvents(frame.events(), this);
+
+        // 2. SENSORS - Get sensory inputs and convert to currents
         var registeredInputs = inputSystem.calculateFrameInputs(frame);
         for (var input : registeredInputs) {
             engine.addInputCurrent(input.indices(), input.currents());
         }
 
-        // 2. BRAIN PROCESS - Run one time step
+        // 3. BRAIN PROCESS - Run one time step
         List<Integer> firedIndices = engine.step(frame.deltaTimeMs());
         diagnosticTracker.registerStep(frame.deltaTimeMs(), firedIndices);
 
-        // 3. RESPONSE - Interpret outputs and move
+        // 4. RESPONSE - Interpret outputs and act
         outputSystem.processOutputs(this, firedIndices, frame.deltaTimeMs());
     }
 
     public SnnDiagnosticState getSnnDiagnostics() {
         return diagnosticTracker.snapshot();
-    }
-
-    public void applyReward() {
-        engine.injectDopamine(5.0);
     }
 
     @Override

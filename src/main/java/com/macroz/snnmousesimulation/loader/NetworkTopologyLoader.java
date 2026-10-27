@@ -5,6 +5,7 @@ import com.macroz.snnmousesimulation.core.PlasticityParams;
 import com.macroz.snnmousesimulation.core.SnnNetworkData;
 import com.macroz.snnmousesimulation.core.input.InputConfig;
 import com.macroz.snnmousesimulation.core.output.OutputConfig;
+import com.macroz.snnmousesimulation.core.reaction.ReactionConfig;
 import com.macroz.snnmousesimulation.exception.SnnParseException;
 import com.macroz.snnmousesimulation.loader.structure.GroupInfo;
 import com.macroz.snnmousesimulation.loader.structure.NeuronInfo;
@@ -41,6 +42,7 @@ public class NetworkTopologyLoader {
 
     private final List<InputConfig> inputConfigs = new ArrayList<>();
     private final List<OutputConfig> outputConfigs = new ArrayList<>();
+    private final List<ReactionConfig> reactionConfigs = new ArrayList<>();
 
     public record GroupPair(GroupInfo from, GroupInfo to) {
     }
@@ -80,6 +82,11 @@ public class NetworkTopologyLoader {
             loadOutputs(outputsNode);
         }
 
+        Node reactionsNode = getChildNode(root, "reactions");
+        if (reactionsNode != null) {
+            loadReactions(reactionsNode);
+        }
+
         return buildDto();
     }
 
@@ -108,7 +115,8 @@ public class NetworkTopologyLoader {
                 weightsArr,
                 plasticity,
                 new ArrayList<>(inputConfigs),
-                new ArrayList<>(outputConfigs)
+                new ArrayList<>(outputConfigs),
+                new ArrayList<>(reactionConfigs)
         );
     }
 
@@ -202,10 +210,33 @@ public class NetworkTopologyLoader {
             if (params.containsKey(name)) {
                 throw new SnnParseException("Duplicate parameter '" + name + "'.", tuple.getKeyNode().getStartMark());
             }
-            Mark mark = valueNode.getStartMark();
-            params.put(name, new ConfigValue(valueNode.getValue(), !valueNode.isPlain(), mark.getLine() + 1, mark.getColumn() + 1));
+            params.put(name, configValue(valueNode));
         }
         return Collections.unmodifiableMap(params);
+    }
+
+    // Raw value with its position; its user converts it to the type it expects
+    private ConfigValue configValue(Node node) {
+        if (!(node instanceof ScalarNode scalarNode)) {
+            throw new SnnParseException("Expected scalar value.", node.getStartMark());
+        }
+        Mark mark = scalarNode.getStartMark();
+        return new ConfigValue(scalarNode.getValue(), !scalarNode.isPlain(), mark.getLine() + 1, mark.getColumn() + 1);
+    }
+
+    private void loadReactions(Node node) {
+        if (!(node instanceof SequenceNode sequenceNode)) {
+            throw new SnnParseException("section 'reactions' must be a sequence.", node.getStartMark());
+        }
+
+        for (Node reactionNode : sequenceNode.getValue()) {
+            reactionConfigs.add(new ReactionConfig(
+                    nodeAs(getChildNodeRequired(reactionNode, "name"), String.class),
+                    configValue(getChildNodeRequired(reactionNode, "event")),
+                    nodeAs(getChildNodeRequired(reactionNode, "reaction_type"), String.class),
+                    loadParams(reactionNode)
+            ));
+        }
     }
 
     private PlasticityParams loadPlasticity(Node node) {

@@ -2,6 +2,7 @@ package com.macroz.snnmousesimulation.core;
 
 import com.macroz.snnmousesimulation.core.input.InputConfig;
 import com.macroz.snnmousesimulation.core.output.OutputConfig;
+import com.macroz.snnmousesimulation.core.reaction.ReactionConfig;
 
 import java.util.List;
 
@@ -16,5 +17,6 @@ public record SnnNetworkData(
 
     // Agent data
     List<InputConfig> inputConfigs,
-    List<OutputConfig> outputConfigs
+    List<OutputConfig> outputConfigs,
+    List<ReactionConfig> reactionConfigs
 ) {}

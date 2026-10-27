@@ -9,7 +9,11 @@ import com.macroz.snnmousesimulation.core.output.concrete.ForwardDriveStrategy;
 import com.macroz.snnmousesimulation.core.output.concrete.PopulationDriveStrategy;
 import com.macroz.snnmousesimulation.core.output.concrete.TurnLeftStrategy;
 import com.macroz.snnmousesimulation.core.output.concrete.TurnRightStrategy;
+import com.macroz.snnmousesimulation.core.reaction.ReactionStrategy;
+import com.macroz.snnmousesimulation.core.reaction.concrete.InjectDopamineReaction;
 import com.macroz.snnmousesimulation.exception.AgentConfigurationException.StrategyType;
+import com.macroz.snnmousesimulation.world.BoundaryHit;
+import com.macroz.snnmousesimulation.world.FoodEaten;
 
 /**
  * All extension points of the simulation. Built-in types are registered here; custom types
@@ -17,10 +21,15 @@ import com.macroz.snnmousesimulation.exception.AgentConfigurationException.Strat
  */
 public final class Registries {
 
+    public static final EventRegistry EVENTS = new EventRegistry();
     public static final StrategyRegistry<InputStrategy> INPUTS = new StrategyRegistry<>(StrategyType.INPUT);
     public static final StrategyRegistry<OutputStrategy> OUTPUTS = new StrategyRegistry<>(StrategyType.OUTPUT);
+    public static final StrategyRegistry<ReactionStrategy<?>> REACTIONS = new StrategyRegistry<>(StrategyType.REACTION);
 
     static {
+        EVENTS.register("FOOD_EATEN", FoodEaten.class);
+        EVENTS.register("BOUNDARY_HIT", BoundaryHit.class);
+
         INPUTS.register("GAUSSIAN_VISION", GaussianVisionStrategy::create);
         INPUTS.register("TONIC_NOISE", TonicNoiseStrategy::create);
         INPUTS.register("OU_NOISE", OrnsteinUhlenbeckNoiseStrategy::create);
@@ -29,6 +38,8 @@ public final class Registries {
         OUTPUTS.register("FORWARD_DRIVE", ForwardDriveStrategy::create);
         OUTPUTS.register("TURN_LEFT", TurnLeftStrategy::create);
         OUTPUTS.register("TURN_RIGHT", TurnRightStrategy::create);
+
+        REACTIONS.register("INJECT_DOPAMINE", InjectDopamineReaction::create);
     }
 
     private Registries() {

@@ -8,7 +8,8 @@ public class AgentConfigurationException extends RuntimeException {
 
     public enum StrategyType {
         INPUT("InputStrategy"),
-        OUTPUT("OutputStrategy");
+        OUTPUT("OutputStrategy"),
+        REACTION("ReactionStrategy");
 
         private final String displayName;
 
