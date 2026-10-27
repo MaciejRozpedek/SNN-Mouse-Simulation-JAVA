@@ -205,6 +205,7 @@ public class SimulationEngine {
                 .map(f -> new SimulationState.FoodState(f.x(), f.y()))
                 .toList();
 
-        return new SimulationState(world.getSimulationTimeMs(), agentState, foodStates, agent.getSnnDiagnostics());
+        return new SimulationState(world.getSimulationTimeMs(), world.width(), world.height(),
+                agentState, foodStates, agent.getSnnDiagnostics());
     }
 }

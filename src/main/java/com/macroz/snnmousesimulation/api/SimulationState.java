@@ -4,6 +4,8 @@ import java.util.List;
 
 public record SimulationState(
     double simulationTimeMs,
+    double worldWidth,
+    double worldHeight,
     AgentState agent,
     List<FoodState> food,
     SnnDiagnosticState snnDiagnostics

@@ -13,6 +13,8 @@
 
 /**
  * @typedef {Object} SimulationState
+ * @property {number} worldWidth
+ * @property {number} worldHeight
  * @property {AgentState} agent
  * @property {FoodState[]} food
  * @property {number} simulationTimeMs
@@ -202,6 +204,10 @@ function renderLoop(frameTime = performance.now()) {
  * @param {SimulationState} world
  */
 function render(world) {
+    if (canvas.width !== world.worldWidth || canvas.height !== world.worldHeight) {
+        canvas.width = world.worldWidth;
+        canvas.height = world.worldHeight;
+    }
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     // Draw Food

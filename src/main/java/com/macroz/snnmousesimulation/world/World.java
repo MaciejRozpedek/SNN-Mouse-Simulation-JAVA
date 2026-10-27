@@ -64,6 +64,14 @@ public class World {
         simulationTimeMs += deltaTime;
     }
 
+    public double width() {
+        return width;
+    }
+
+    public double height() {
+        return height;
+    }
+
     private void handleFoodCollision(Food eatenFood, double timestampMs) {
         food.remove(eatenFood);
         agent.applyReward();
