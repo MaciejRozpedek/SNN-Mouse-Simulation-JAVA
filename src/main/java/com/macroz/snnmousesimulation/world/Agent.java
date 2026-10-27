@@ -18,7 +18,7 @@ import lombok.Setter;
 import java.util.List;
 
 @Getter
-public class Agent {
+public class Agent implements AgentEffects {
     @Setter
     private double x;
     @Setter
@@ -79,9 +79,15 @@ public class Agent {
         engine.injectDopamine(5.0);
     }
 
-    public void move(double speed, double rotation) {
-        this.angle += rotation;
-        this.x += Math.cos(this.angle) * speed;
-        this.y += Math.sin(this.angle) * speed;
+    @Override
+    public void injectDopamine(double amount) {
+        engine.injectDopamine(amount);
+    }
+
+    @Override
+    public void move(double distance, double rotationRadians) {
+        this.angle += rotationRadians;
+        this.x += Math.cos(this.angle) * distance;
+        this.y += Math.sin(this.angle) * distance;
     }
 }

@@ -1,7 +1,7 @@
 package com.macroz.snnmousesimulation.core.output;
 
-import com.macroz.snnmousesimulation.world.Agent;
+import com.macroz.snnmousesimulation.world.AgentEffects;
 
 public interface OutputStrategy {
-    void apply(Agent agent, boolean[] firedLocalIndices, double deltaTime);
+    void apply(AgentEffects effects, boolean[] firedLocalIndices, double deltaTime);
 }
