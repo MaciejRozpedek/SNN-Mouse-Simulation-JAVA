@@ -2,7 +2,7 @@ package com.macroz.snnmousesimulation.core.output.concrete;
 
 import com.macroz.snnmousesimulation.core.output.OutputStrategy;
 import com.macroz.snnmousesimulation.utility.ConfigParams;
-import com.macroz.snnmousesimulation.world.Agent;
+import com.macroz.snnmousesimulation.world.AgentEffects;
 
 
 public class PopulationDriveStrategy implements OutputStrategy {
@@ -22,7 +22,7 @@ public class PopulationDriveStrategy implements OutputStrategy {
     }
 
     @Override
-    public void apply(Agent agent, boolean[] firedLocalIndices, double deltaTimeMs) {
+    public void apply(AgentEffects effects, boolean[] firedLocalIndices, double deltaTimeMs) {
         int count = firedLocalIndices.length;
         if (count < 2) return;
 
@@ -51,7 +51,7 @@ public class PopulationDriveStrategy implements OutputStrategy {
         if (forwardSpeed > 0 || Math.abs(rotationRateDegrees) > 0) {
             double deltaTimeSeconds = deltaTimeMs / 1000.0;
             double rotationRadians = Math.toRadians(rotationRateDegrees * deltaTimeSeconds);
-            agent.move(forwardSpeed * deltaTimeSeconds, rotationRadians);
+            effects.move(forwardSpeed * deltaTimeSeconds, rotationRadians);
         }
     }
 }

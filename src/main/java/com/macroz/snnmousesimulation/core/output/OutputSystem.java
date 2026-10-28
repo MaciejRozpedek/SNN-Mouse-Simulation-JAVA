@@ -1,5 +1,5 @@
 package com.macroz.snnmousesimulation.core.output;
-import com.macroz.snnmousesimulation.world.Agent;
+import com.macroz.snnmousesimulation.world.AgentEffects;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,7 +18,7 @@ public class OutputSystem {
         outputs.add(new OutputSystem.OutputBinding(targetIndices, strategy));
     }
 
-    public void processOutputs(Agent agent, List<Integer> allGlobalFiredIndices, double deltaTime) {
+    public void processOutputs(AgentEffects effects, List<Integer> allGlobalFiredIndices, double deltaTime) {
         Set<Integer> firedSet = new HashSet<>(allGlobalFiredIndices);
 
         for (OutputBinding binding : outputs) {
@@ -31,7 +31,7 @@ public class OutputSystem {
                 }
             }
 
-            binding.strategy.apply(agent, localFiredState, deltaTime);
+            binding.strategy.apply(effects, localFiredState, deltaTime);
         }
     }
 }

@@ -3,7 +3,7 @@ package com.macroz.snnmousesimulation.core.output.concrete;
 import com.macroz.snnmousesimulation.core.output.OutputStrategy;
 import com.macroz.snnmousesimulation.utility.ConfigParams;
 import com.macroz.snnmousesimulation.utility.ParamChecks;
-import com.macroz.snnmousesimulation.world.Agent;
+import com.macroz.snnmousesimulation.world.AgentEffects;
 
 
 /**
@@ -22,7 +22,7 @@ public final class ForwardDriveStrategy implements OutputStrategy {
     }
 
     @Override
-    public void apply(Agent agent, boolean[] firedLocalIndices, double deltaTimeMs) {
+    public void apply(AgentEffects effects, boolean[] firedLocalIndices, double deltaTimeMs) {
         int spikeCount = 0;
         for (boolean fired : firedLocalIndices) {
             if (fired) {
@@ -32,7 +32,7 @@ public final class ForwardDriveStrategy implements OutputStrategy {
         if (spikeCount > 0) {
             double forwardSpeed = speedPerSecond * spikeCount / firedLocalIndices.length;
             double deltaTimeSeconds = deltaTimeMs / 1000.0;
-            agent.move(forwardSpeed * deltaTimeSeconds, 0.0);
+            effects.move(forwardSpeed * deltaTimeSeconds, 0.0);
         }
     }
 }
