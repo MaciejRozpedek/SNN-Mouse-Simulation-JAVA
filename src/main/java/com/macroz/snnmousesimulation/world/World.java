@@ -10,8 +10,8 @@ import java.util.List;
 import java.util.Random;
 
 public class World {
-    private final double width;
-    private final double height;
+    @Getter
+    private final Geometry geometry;
 
     @Getter
     private double simulationTimeMs = 0;
@@ -27,12 +27,11 @@ public class World {
 
     private static final double EAT_RADIUS = 30.0;
 
-    public World(double width, double height, int numberOfFood, SnnNetworkData snnNetworkData) {
-        this.width = width;
-        this.height = height;
+    public World(Geometry geometry, int numberOfFood, SnnNetworkData snnNetworkData) {
+        this.geometry = geometry;
         this.food = new ArrayList<>();
         this.worldView = WorldView.from(this);
-        this.agent = new Agent(width / 2, height / 2, snnNetworkData);
+        this.agent = new Agent(geometry.width() / 2, geometry.height() / 2, snnNetworkData);
         initializeFood(numberOfFood);
     }
 
@@ -48,11 +47,16 @@ public class World {
         agent.update(inputFrame);
         pendingAgentEvents = List.of();
         currentTickEvents.clear();
-        handleBoundaries(simulationTimeMs);
+        if (geometry.type() == Geometry.Type.TORUS) {
+            agent.setX(geometry.wrapX(agent.getX()));
+            agent.setY(geometry.wrapY(agent.getY()));
+        } else {
+            handleBoundaries(simulationTimeMs);
+        }
 
         List<Food> collidedFoods = new ArrayList<>();
         for (Food f : food) {
-            if (distanceSquared(f.x(), f.y(), agent.getX(), agent.getY()) < EAT_RADIUS * EAT_RADIUS) {
+            if (geometry.distanceSquared(f.x(), f.y(), agent.getX(), agent.getY()) < EAT_RADIUS * EAT_RADIUS) {
                 collidedFoods.add(f);
             }
         }
@@ -81,16 +85,10 @@ public class World {
         double x;
         double y;
         do {
-            x = random.nextDouble(0, width);
-            y = random.nextDouble(0, height);
-        } while (distanceSquared(x, y, agent.getX(), agent.getY()) < EAT_RADIUS * EAT_RADIUS);
+            x = random.nextDouble(0, geometry.width());
+            y = random.nextDouble(0, geometry.height());
+        } while (geometry.distanceSquared(x, y, agent.getX(), agent.getY()) < EAT_RADIUS * EAT_RADIUS);
         food.add(new Food(x, y));
-    }
-
-    private double distanceSquared(double x1, double y1, double x2, double y2) {
-        double dx = x1 - x2;
-        double dy = y1 - y2;
-        return dx * dx + dy * dy;
     }
 
     private double normalizeAngle(double angle) {
@@ -111,8 +109,8 @@ public class World {
             angle = Math.PI - angle;
             bounced = true;
             currentTickEvents.add(new BoundaryHit(timestampMs, BoundaryHit.Side.LEFT));
-        } else if (x > width) {
-            x = 2 * width - x;
+        } else if (x > geometry.width()) {
+            x = 2 * geometry.width() - x;
             angle = Math.PI - angle;
             bounced = true;
             currentTickEvents.add(new BoundaryHit(timestampMs, BoundaryHit.Side.RIGHT));
@@ -124,8 +122,8 @@ public class World {
             angle = -angle;
             bounced = true;
             currentTickEvents.add(new BoundaryHit(timestampMs, BoundaryHit.Side.TOP));
-        } else if (y > height) {
-            y = 2 * height - y;
+        } else if (y > geometry.height()) {
+            y = 2 * geometry.height() - y;
             angle = -angle;
             bounced = true;
             currentTickEvents.add(new BoundaryHit(timestampMs, BoundaryHit.Side.BOTTOM));

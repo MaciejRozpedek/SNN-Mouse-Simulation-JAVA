@@ -6,6 +6,7 @@ import com.macroz.snnmousesimulation.utility.ConfigParams;
 import com.macroz.snnmousesimulation.utility.ParamChecks;
 import com.macroz.snnmousesimulation.world.AgentView;
 import com.macroz.snnmousesimulation.world.Food;
+import com.macroz.snnmousesimulation.world.Geometry;
 
 
 public class GaussianVisionStrategy implements InputStrategy {
@@ -44,13 +45,14 @@ public class GaussianVisionStrategy implements InputStrategy {
 
         double[] currents = new double[targetNeuronCount];
         AgentView agent = frame.agent();
+        Geometry geometry = frame.world().geometry();
 
         double sigma = (fovRadians / targetNeuronCount) * OVERLAP_FACTOR;
         double sigmaSq2 = 2 * sigma * sigma;
 
         for (Food food : frame.world().food()) {
-            double dx = food.x() - agent.x();
-            double dy = food.y() - agent.y();
+            double dx = geometry.dx(agent.x(), food.x());
+            double dy = geometry.dy(agent.y(), food.y());
             double distSq = dx * dx + dy * dy;
 
             if (distSq > maxRangeSq) continue;
