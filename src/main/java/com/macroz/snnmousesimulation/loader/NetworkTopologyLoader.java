@@ -142,7 +142,9 @@ public class NetworkTopologyLoader {
                     name,
                     type,
                     targetNeurons.stream().mapToInt(i -> i).toArray(),
-                    params
+                    params,
+                    inputNode.getStartMark().getLine() + 1,
+                    inputNode.getStartMark().getColumn() + 1
             ));
         }
     }
@@ -176,7 +178,9 @@ public class NetworkTopologyLoader {
                     name,
                     strategyType,
                     sourceNeurons.stream().mapToInt(i -> i).toArray(),
-                    params
+                    params,
+                    outputNode.getStartMark().getLine() + 1,
+                    outputNode.getStartMark().getColumn() + 1
             ));
         }
     }

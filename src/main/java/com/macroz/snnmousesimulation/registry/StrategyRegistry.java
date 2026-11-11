@@ -2,6 +2,7 @@ package com.macroz.snnmousesimulation.registry;
 
 import com.macroz.snnmousesimulation.exception.AgentConfigurationException;
 import com.macroz.snnmousesimulation.exception.AgentConfigurationException.StrategyType;
+import com.macroz.snnmousesimulation.exception.SnnParseException;
 import com.macroz.snnmousesimulation.utility.ConfigParams;
 import com.macroz.snnmousesimulation.utility.ConfigValue;
 
@@ -25,13 +26,13 @@ public final class StrategyRegistry<T> {
         factories.put(type.toUpperCase(), factory);
     }
 
-    public T create(String type, Map<String, ConfigValue> params) {
+    public T create(String type, Map<String, ConfigValue> params, int line, int column) {
         var factory = factories.get(type.toUpperCase());
         if (factory == null) {
-            throw new IllegalArgumentException("Unknown " + kind + " type: " + type + ". Available: " + factories.keySet());
+            throw new SnnParseException("Unknown " + kind + " type: " + type + ". Available: " + factories.keySet(), line, column);
         }
         try {
-            return new ConfigParams(params).build(factory);
+            return new ConfigParams(params, line, column).build(factory);
         } catch (Exception e) {
             throw new AgentConfigurationException(kind, type, params, e);
         }

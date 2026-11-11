@@ -47,12 +47,12 @@ public class Agent implements AgentEffects {
 
         for (InputConfig config : data.inputConfigs()) {
             inputSystem.addInput(config.targetNeuronIndices(),
-                    Registries.INPUTS.create(config.sensorType(), config.params()));
+                    Registries.INPUTS.create(config.sensorType(), config.params(), config.line(), config.column()));
         }
 
         for (OutputConfig config : data.outputConfigs()) {
             outputSystem.addOutput(config.sourceNeuronIndices(),
-                    Registries.OUTPUTS.create(config.outputType(), config.params()));
+                    Registries.OUTPUTS.create(config.outputType(), config.params(), config.line(), config.column()));
         }
     }
 

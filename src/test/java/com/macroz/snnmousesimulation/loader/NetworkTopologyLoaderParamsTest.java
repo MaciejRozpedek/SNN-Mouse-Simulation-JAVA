@@ -93,6 +93,13 @@ class NetworkTopologyLoaderParamsTest {
     }
 
     @Test
+    void recordsWhereAnEntryStarts() {
+        var input = load(NETWORK).inputConfigs().getFirst();
+        String textAtPosition = NETWORK.lines().toList().get(input.line() - 1).substring(input.column() - 1);
+        assertTrue(textAtPosition.startsWith("name: In"), textAtPosition);
+    }
+
+    @Test
     void readsRequiredPlasticityParams() {
         PlasticityParams expected = new PlasticityParams(
                 new PlasticityParams.Stdp(21.0, 22.0, 0.1, 0.2, 400.0, 30.0),

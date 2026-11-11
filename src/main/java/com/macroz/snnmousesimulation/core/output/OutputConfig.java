@@ -8,5 +8,7 @@ public record OutputConfig(
     String name,
     String outputType,
     int[] sourceNeuronIndices,
-    Map<String, ConfigValue> params
+    Map<String, ConfigValue> params,
+    int line,
+    int column
 ) {}

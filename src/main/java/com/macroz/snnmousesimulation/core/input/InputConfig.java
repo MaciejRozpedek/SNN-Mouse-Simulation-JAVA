@@ -8,5 +8,7 @@ public record InputConfig(
         String name,
         String sensorType,
         int[] targetNeuronIndices,
-        Map<String, ConfigValue> params
+        Map<String, ConfigValue> params,
+        int line,
+        int column
 ) {}
