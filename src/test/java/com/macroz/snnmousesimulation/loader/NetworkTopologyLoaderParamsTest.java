@@ -82,6 +82,17 @@ class NetworkTopologyLoaderParamsTest {
     }
 
     @Test
+    void rejectsUnknownKeysInInputAndOutputEntries() {
+        var input = assertThrows(SnnParseException.class, () -> load(NETWORK.replace("params:", "parms:")));
+        assertTrue(input.getMessage().contains("'parms'"), input.getMessage());
+
+        String output = "outputs:\n  - {name: Out, output_type: ANY, source_group: G, source_type: RS%s}\n";
+        assertEquals(1, load(NETWORK + output.formatted("")).outputConfigs().size());
+        var extra = assertThrows(SnnParseException.class, () -> load(NETWORK + output.formatted(", extra: 1")));
+        assertTrue(extra.getMessage().contains("'extra'"), extra.getMessage());
+    }
+
+    @Test
     void readsRequiredPlasticityParams() {
         PlasticityParams expected = new PlasticityParams(
                 new PlasticityParams.Stdp(21.0, 22.0, 0.1, 0.2, 400.0, 30.0),

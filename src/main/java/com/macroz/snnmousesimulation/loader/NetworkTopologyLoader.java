@@ -118,6 +118,7 @@ public class NetworkTopologyLoader {
         }
 
         for (Node inputNode : sequenceNode.getValue()) {
+            requireOnlyKeys(inputNode, List.of("name", "input_type", "target_group", "target_type", "params"));
             String name = nodeAs(getChildNodeRequired(inputNode, "name"), String.class);
             String type = nodeAs(getChildNodeRequired(inputNode, "input_type"), String.class);
             String target = nodeAs(getChildNodeRequired(inputNode, "target_group"), String.class);
@@ -152,6 +153,7 @@ public class NetworkTopologyLoader {
         }
 
         for (Node outputNode : sequenceNode.getValue()) {
+            requireOnlyKeys(outputNode, List.of("name", "output_type", "source_group", "source_type", "params"));
             String name = nodeAs(getChildNodeRequired(outputNode, "name"), String.class);
             String strategyType = nodeAs(getChildNodeRequired(outputNode, "output_type"), String.class);
             String sourceGroupPattern = nodeAs(getChildNodeRequired(outputNode, "source_group"), String.class);
@@ -637,6 +639,19 @@ public class NetworkTopologyLoader {
             throw new SnnParseException("Missing required key '" + key + "'.", parent.getStartMark());
         }
         return child;
+    }
+
+    private void requireOnlyKeys(Node node, List<String> allowed) {
+        if (!(node instanceof MappingNode mappingNode)) {
+            return;
+        }
+        for (NodeTuple tuple : mappingNode.getValue()) {
+            String key = nodeAs(tuple.getKeyNode(), String.class);
+            if (!allowed.contains(key)) {
+                throw new SnnParseException("Unknown key '" + key + "'. Allowed keys: " + String.join(", ", allowed) + ".",
+                        tuple.getKeyNode().getStartMark());
+            }
+        }
     }
 
     @SuppressWarnings("unchecked")
