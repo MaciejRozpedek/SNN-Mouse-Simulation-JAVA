@@ -1,9 +1,13 @@
 package com.macroz.snnmousesimulation.api;
 
 import com.macroz.snnmousesimulation.service.SimulationEngine;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+
+import java.io.IOException;
+import java.nio.file.FileAlreadyExistsException;
 
 @RestController
 @RequestMapping("/api")
@@ -38,5 +42,20 @@ public class SimulationController {
     @GetMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter streamSimulation() {
         return simulationEngine.subscribe();
+    }
+
+    @PostMapping("/config/brains/{name}")
+    public void createConfig(@PathVariable String name, @RequestBody String yaml) throws IOException {
+        simulationEngine.saveConfig(name, yaml, false);
+    }
+
+    @PutMapping("/config/brains/{name}")
+    public void updateConfig(@PathVariable String name, @RequestBody String yaml) throws IOException {
+        simulationEngine.saveConfig(name, yaml, true);
+    }
+
+    @ExceptionHandler(FileAlreadyExistsException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public void configAlreadyExists() {
     }
 }

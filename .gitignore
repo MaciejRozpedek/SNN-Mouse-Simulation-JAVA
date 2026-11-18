@@ -79,3 +79,6 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Saved configs ###
+configs/

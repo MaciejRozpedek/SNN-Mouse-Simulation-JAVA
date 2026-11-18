@@ -64,6 +64,15 @@ public class SimulationEngine {
         }
     }
 
+    public synchronized void saveConfig(String name, String yaml, boolean overwrite) throws IOException {
+        World newWorld = new World(GEOMETRY, 100, snnConfigProvider.parse(yaml));
+        snnConfigProvider.save(name, yaml, overwrite);
+        stopSimulationLocked();
+        synchronized (worldLock) {
+            this.world = newWorld;
+        }
+    }
+
     private void runLoop() {
         long expectedTime = System.nanoTime();
 
