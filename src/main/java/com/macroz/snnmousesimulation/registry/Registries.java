@@ -9,6 +9,8 @@ import com.macroz.snnmousesimulation.core.output.concrete.ForwardDriveStrategy;
 import com.macroz.snnmousesimulation.core.output.concrete.PopulationDriveStrategy;
 import com.macroz.snnmousesimulation.core.output.concrete.TurnLeftStrategy;
 import com.macroz.snnmousesimulation.core.output.concrete.TurnRightStrategy;
+import com.macroz.snnmousesimulation.core.reaction.ReactionStrategy;
+import com.macroz.snnmousesimulation.core.reaction.concrete.FoodRewardStrategy;
 import com.macroz.snnmousesimulation.exception.AgentConfigurationException.StrategyType;
 
 /**
@@ -19,6 +21,7 @@ public final class Registries {
 
     public static final StrategyRegistry<InputStrategy> INPUTS = new StrategyRegistry<>(StrategyType.INPUT);
     public static final StrategyRegistry<OutputStrategy> OUTPUTS = new StrategyRegistry<>(StrategyType.OUTPUT);
+    public static final StrategyRegistry<ReactionStrategy> REACTIONS = new StrategyRegistry<>(StrategyType.REACTION);
 
     static {
         INPUTS.register("GAUSSIAN_VISION", GaussianVisionStrategy::create);
@@ -29,6 +32,8 @@ public final class Registries {
         OUTPUTS.register("FORWARD_DRIVE", ForwardDriveStrategy::create);
         OUTPUTS.register("TURN_LEFT", TurnLeftStrategy::create);
         OUTPUTS.register("TURN_RIGHT", TurnRightStrategy::create);
+
+        REACTIONS.register("FOOD_REWARD", FoodRewardStrategy::create);
     }
 
     private Registries() {

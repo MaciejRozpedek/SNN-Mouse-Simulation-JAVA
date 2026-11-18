@@ -100,6 +100,17 @@ class NetworkTopologyLoaderParamsTest {
     }
 
     @Test
+    void readsOptionalReactions() {
+        assertTrue(load(NETWORK).reactionConfigs().isEmpty());
+
+        String yaml = NETWORK + "reactions:\n  - name: Re\n    reaction_type: ANY\n    params:\n      amount: 2\n";
+        var reaction = load(yaml).reactionConfigs().getFirst();
+        assertEquals("Re", reaction.name());
+        assertEquals("ANY", reaction.reactionType());
+        assertParam(yaml, reaction.params().get("amount"), "2", false);
+    }
+
+    @Test
     void readsRequiredPlasticityParams() {
         PlasticityParams expected = new PlasticityParams(
                 new PlasticityParams.Stdp(21.0, 22.0, 0.1, 0.2, 400.0, 30.0),

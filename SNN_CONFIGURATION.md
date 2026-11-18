@@ -1,6 +1,6 @@
 # Configuration File Schema
 
-This document describes the configuration format for defining a neural network model. It is organized into six main sections: `plasticity`, `neuron_types`, `groups`, `inputs`, `outputs`, and `connections`.
+This document describes the configuration format for defining a neural network model. It is organized into seven main sections: `plasticity`, `neuron_types`, `groups`, `inputs`, `outputs`, `reactions`, and `connections`.
 
 ## `plasticity`
 
@@ -208,3 +208,26 @@ outputs:
 
 Concrete output types and their parameters are documented in
 [`SNN_CONFIGURATION_OUTPUTS.md`](SNN_CONFIGURATION_OUTPUTS.md).
+
+## `reactions`
+
+This section defines what happens to the agent itself, bypassing the network, e.g. dopamine released when it eats food. Reactions are applied at the start of every simulation step, before inputs.
+
+### Structure
+
+```yaml
+reactions:
+  - name: <string>
+    reaction_type: <string>
+    params:
+      # ... (reaction-specific parameters)
+```
+
+### Properties
+
+*   `name` (`<string>`): A unique name for the reaction.
+*   `reaction_type` (`<string>`): The reaction type (e.g. "FOOD_REWARD").
+*   `params`: A map of reaction-specific parameters.
+
+Concrete reaction types and their parameters are documented in
+[`SNN_CONFIGURATION_REACTIONS.md`](SNN_CONFIGURATION_REACTIONS.md).

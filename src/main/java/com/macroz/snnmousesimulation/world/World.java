@@ -70,7 +70,6 @@ public class World {
 
     private void handleFoodCollision(Food eatenFood, double timestampMs) {
         food.remove(eatenFood);
-        agent.applyReward();
         currentTickEvents.add(new FoodEaten(timestampMs));
         spawnSingleFood();
     }

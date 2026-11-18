@@ -5,6 +5,7 @@ import com.macroz.snnmousesimulation.core.PlasticityParams;
 import com.macroz.snnmousesimulation.core.SnnNetworkData;
 import com.macroz.snnmousesimulation.core.input.InputConfig;
 import com.macroz.snnmousesimulation.core.output.OutputConfig;
+import com.macroz.snnmousesimulation.core.reaction.ReactionConfig;
 import com.macroz.snnmousesimulation.exception.SnnParseException;
 import com.macroz.snnmousesimulation.loader.structure.GroupInfo;
 import com.macroz.snnmousesimulation.loader.structure.NeuronInfo;
@@ -41,6 +42,7 @@ public class NetworkTopologyLoader {
 
     private final List<InputConfig> inputConfigs = new ArrayList<>();
     private final List<OutputConfig> outputConfigs = new ArrayList<>();
+    private final List<ReactionConfig> reactionConfigs = new ArrayList<>();
 
     public record GroupPair(GroupInfo from, GroupInfo to) {
     }
@@ -80,6 +82,11 @@ public class NetworkTopologyLoader {
             loadOutputs(outputsNode);
         }
 
+        Node reactionsNode = getChildNode(root, "reactions");
+        if (reactionsNode != null) {
+            loadReactions(reactionsNode);
+        }
+
         return buildDto();
     }
 
@@ -108,7 +115,8 @@ public class NetworkTopologyLoader {
                 weightsArr,
                 plasticity,
                 new ArrayList<>(inputConfigs),
-                new ArrayList<>(outputConfigs)
+                new ArrayList<>(outputConfigs),
+                new ArrayList<>(reactionConfigs)
         );
     }
 
@@ -181,6 +189,23 @@ public class NetworkTopologyLoader {
                     params,
                     outputNode.getStartMark().getLine() + 1,
                     outputNode.getStartMark().getColumn() + 1
+            ));
+        }
+    }
+
+    private void loadReactions(Node node) {
+        if (!(node instanceof SequenceNode sequenceNode)) {
+            throw new SnnParseException("section 'reactions' must be a sequence.", node.getStartMark());
+        }
+
+        for (Node reactionNode : sequenceNode.getValue()) {
+            requireOnlyKeys(reactionNode, List.of("name", "reaction_type", "params"));
+            reactionConfigs.add(new ReactionConfig(
+                    nodeAs(getChildNodeRequired(reactionNode, "name"), String.class),
+                    nodeAs(getChildNodeRequired(reactionNode, "reaction_type"), String.class),
+                    loadParams(reactionNode),
+                    reactionNode.getStartMark().getLine() + 1,
+                    reactionNode.getStartMark().getColumn() + 1
             ));
         }
     }

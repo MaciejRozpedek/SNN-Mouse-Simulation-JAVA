@@ -93,7 +93,17 @@ outputs:
       turn_rate: 360.0
 
 # -----------------------------------------------------------------------------
-# 6. Connection Rules
+# 6. Reaction Definitions
+# -----------------------------------------------------------------------------
+# Defines what happens to the agent itself, bypassing the network.
+reactions:
+  - name: FoodReward
+    reaction_type: FOOD_REWARD
+    params:
+      amount: 5.0
+
+# -----------------------------------------------------------------------------
+# 7. Connection Rules
 # -----------------------------------------------------------------------------
 # A list of rules that create synapses between neuron groups.
 connections:

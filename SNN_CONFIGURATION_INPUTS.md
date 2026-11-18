@@ -57,8 +57,8 @@ target neuron and simulation step:
 
 Parameters:
 
-- `base_current` - mean current; default `0`, must be finite.
-- `noise_std` - Gaussian standard deviation; default `0`, must be finite and
+- `base_current` - mean current; default `0`.
+- `noise_std` - Gaussian standard deviation; default `0`, must be
   non-negative.
 - `allow_negative` - if `false`, negative currents are clamped to `0`; default
   `false`.
@@ -89,8 +89,8 @@ Noise of neighboring target neurons (by index) can also be correlated:
 
 Parameters:
 
-- `base_current` - mean current; default `0`, must be finite.
-- `noise_std` - stationary standard deviation; default `0`, must be finite and
+- `base_current` - mean current; default `0`.
+- `noise_std` - stationary standard deviation; default `0`, must be
   non-negative.
 - `tau_ms` - noise time constant in milliseconds; default `20`, must be
   positive.
