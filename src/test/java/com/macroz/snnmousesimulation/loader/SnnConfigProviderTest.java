@@ -1,12 +1,15 @@
 package com.macroz.snnmousesimulation.loader;
 
+import com.macroz.snnmousesimulation.exception.InvalidConfigNameException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -49,10 +52,23 @@ class SnnConfigProviderTest {
     }
 
     @Test
+    void listsAndReadsSavedConfigs(@TempDir Path dir) throws Exception {
+        SnnConfigProvider provider = provider(dir);
+        assertEquals(List.of(), provider.list());
+
+        provider.save("examples/Rat", network(2), false);
+        provider.save("Mouse", network(1), false);
+
+        assertEquals(List.of("Mouse", "examples/Rat"), provider.list());
+        assertEquals(network(2), provider.read("examples/Rat"));
+        assertThrows(NoSuchFileException.class, () -> provider.read("Cat"));
+    }
+
+    @Test
     void rejectsNamesOutsideTheFolder(@TempDir Path dir) {
         SnnConfigProvider provider = provider(dir.resolve("configs"));
 
-        var error = assertThrows(IllegalArgumentException.class, () -> provider.save("../../Mouse", network(1), false));
+        var error = assertThrows(InvalidConfigNameException.class,() -> provider.save("../../Mouse", network(1), false));
         assertTrue(error.getMessage().contains("'../../Mouse'"), error.getMessage());
         assertFalse(Files.exists(dir.resolve("Mouse.yaml")));
     }

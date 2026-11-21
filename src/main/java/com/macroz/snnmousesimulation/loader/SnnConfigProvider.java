@@ -1,6 +1,7 @@
 package com.macroz.snnmousesimulation.loader;
 
 import com.macroz.snnmousesimulation.core.SnnNetworkData;
+import com.macroz.snnmousesimulation.exception.InvalidConfigNameException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import java.io.ByteArrayInputStream;
@@ -12,12 +13,14 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.List;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 @Component
 public class SnnConfigProvider {
 
-    private static final Pattern CONFIG_NAME = Pattern.compile("[A-Za-z0-9_-]{1,64}");
+    private static final Pattern CONFIG_NAME = Pattern.compile("[A-Za-z0-9_-]{1,64}(/[A-Za-z0-9_-]{1,64})*");
 
     @Value("${snn.config.path:src/main/resources/config/SNNConfig.yaml}")
     private String configPath;
@@ -50,11 +53,28 @@ public class SnnConfigProvider {
         return new NetworkTopologyLoader().load(new ByteArrayInputStream(yaml.getBytes(StandardCharsets.UTF_8)));
     }
 
-    public void save(String name, String yaml, boolean overwrite) throws IOException {
-        if (!CONFIG_NAME.matcher(name).matches()) {
-            throw new IllegalArgumentException("Invalid config name '" + name + "'. Use 1-64 letters, digits, '_' or '-'.");
+    public List<String> list() throws IOException {
+        Path dir = Path.of(configsDir, "brains");
+        if (!Files.isDirectory(dir)) {
+            return List.of();
         }
-        Path file = Path.of(configsDir, "brains", name + ".yaml");
+        try (Stream<Path> files = Files.walk(dir)) {
+            return files.filter(Files::isRegularFile)
+                    .map(file -> dir.relativize(file).toString().replace(File.separatorChar, '/'))
+                    .filter(path -> path.endsWith(".yaml"))
+                    .map(path -> path.substring(0, path.length() - ".yaml".length()))
+                    .filter(name -> CONFIG_NAME.matcher(name).matches())
+                    .sorted()
+                    .toList();
+        }
+    }
+
+    public String read(String name) throws IOException {
+        return Files.readString(configFile(name));
+    }
+
+    public void save(String name, String yaml, boolean overwrite) throws IOException {
+        Path file = configFile(name);
         Files.createDirectories(file.getParent());
         if (overwrite) {
             Files.writeString(file, yaml);
@@ -62,5 +82,12 @@ public class SnnConfigProvider {
             Files.writeString(file, yaml, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE);
         }
         selectedConfig = file;
+    }
+
+    private Path configFile(String name) {
+        if (!CONFIG_NAME.matcher(name).matches()) {
+            throw new InvalidConfigNameException(name);
+        }
+        return Path.of(configsDir, "brains", name + ".yaml");
     }
 }

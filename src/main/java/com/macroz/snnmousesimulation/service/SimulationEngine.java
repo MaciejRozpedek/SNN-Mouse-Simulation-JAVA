@@ -64,6 +64,14 @@ public class SimulationEngine {
         }
     }
 
+    public List<String> listConfigs() throws IOException {
+        return snnConfigProvider.list();
+    }
+
+    public String readConfig(String name) throws IOException {
+        return snnConfigProvider.read(name);
+    }
+
     public synchronized void saveConfig(String name, String yaml, boolean overwrite) throws IOException {
         World newWorld = new World(GEOMETRY, 100, snnConfigProvider.parse(yaml));
         snnConfigProvider.save(name, yaml, overwrite);
